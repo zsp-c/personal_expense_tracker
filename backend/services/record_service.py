@@ -12,24 +12,33 @@ from repositories import record_repository
 
 
 def create_record(data: RecordCreate) -> int:
-    """新增一条记录，返回记录 id。
-
-    TODO(成员 C)：调用 record_repository.insert_record。
-    """
-    raise NotImplementedError("待实现：成员 C")
+    """新增一条记录，返回记录 id。"""
+    record_data = {
+        "date": data.date.isoformat(),
+        "type": data.type,
+        "amount": data.amount,
+        "category": data.category,
+        "remark": data.remark,
+    }
+    return record_repository.insert_record(record_data)
 
 
 def update_record(record_id: int, data: RecordUpdate) -> None:
-    """修改一条记录；记录不存在时抛出 ValueError。
-
-    TODO(成员 C)：先查询存在性，再调用 update_record。
-    """
-    raise NotImplementedError("待实现：成员 C")
+    """修改一条记录；记录不存在时抛出 ValueError。"""
+    record_data = {
+        "date": data.date.isoformat(),
+        "type": data.type,
+        "amount": data.amount,
+        "category": data.category,
+        "remark": data.remark,
+    }
+    success = record_repository.update_record(record_id, record_data)
+    if not success:
+        raise ValueError(f"记录 id={record_id} 不存在")
 
 
 def delete_record(record_id: int) -> None:
-    """删除一条记录；记录不存在时抛出 ValueError。
-
-    TODO(成员 C)：调用 repository.delete_record，失败时抛出异常。
-    """
-    raise NotImplementedError("待实现：成员 C")
+    """删除一条记录；记录不存在时抛出 ValueError。"""
+    success = record_repository.delete_record(record_id)
+    if not success:
+        raise ValueError(f"记录 id={record_id} 不存在")

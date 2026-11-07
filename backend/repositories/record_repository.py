@@ -11,12 +11,30 @@
 from database.connection import get_connection
 
 
-def insert_record(data) -> int:
+def insert_record(data: dict) -> int:
     """插入一条记录，返回新记录 id。
 
-    TODO(成员 C)：实现 INSERT，字段顺序与建表语句一致。
+    data 字段：date(str, YYYY-MM-DD), type, amount, category, remark
     """
-    raise NotImplementedError("待实现：成员 C")
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            """
+            INSERT INTO records (date, type, amount, category, remark)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                data["date"],
+                data["type"],
+                data["amount"],
+                data["category"],
+                data["remark"],
+            ),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
 
 
 def get_all_records(
@@ -41,17 +59,40 @@ def get_record_by_id(record_id: int) -> dict | None:
     raise NotImplementedError("待实现：成员 D")
 
 
-def update_record(record_id: int, data) -> bool:
-    """更新记录，返回是否更新成功。
-
-    TODO(成员 C)：实现 UPDATE。
-    """
-    raise NotImplementedError("待实现：成员 C")
+def update_record(record_id: int, data: dict) -> bool:
+    """更新记录，返回是否更新成功（用 rowcount 判断）。"""
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            """
+            UPDATE records
+            SET date = ?, type = ?, amount = ?, category = ?, remark = ?
+            WHERE id = ?
+            """,
+            (
+                data["date"],
+                data["type"],
+                data["amount"],
+                data["category"],
+                data["remark"],
+                record_id,
+            ),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    finally:
+        conn.close()
 
 
 def delete_record(record_id: int) -> bool:
-    """删除记录，返回是否删除成功。
-
-    TODO(成员 C)：实现 DELETE，用 cursor.rowcount > 0 判断。
-    """
-    raise NotImplementedError("待实现：成员 C")
+    """删除记录，返回是否删除成功（用 rowcount 判断）。"""
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            "DELETE FROM records WHERE id = ?",
+            (record_id,),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    finally:
+        conn.close()

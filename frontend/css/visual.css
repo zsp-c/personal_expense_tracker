@@ -1,0 +1,434 @@
+/* ============================================================
+   视觉增强层 —— 模块负责人：成员 F
+   在 style.css、shell.css、theme.css 之后加载，只做颜色与图像装饰：
+   完整配色 token、页面纹理、顶栏水印、概览主视觉、模块区分、深色页脚。
+   不修改 DOM、id、class 名，不改队友 JS，也不引入任何外部资源。
+   ============================================================ */
+
+/* ---------- 设计系统：完整颜色 token ---------- */
+
+:root {
+    /* 学院蓝 50–900（主色系） */
+    --brand-50: #eff6fe;
+    --brand-100: #dcebfb;
+    --brand-200: #b9d6f5;
+    --brand-300: #8bbbe9;
+    --brand-400: #569cd9;
+    --brand-500: #2f7bc4;
+    --brand-600: #1a5fa8;
+    --brand-700: #134a86;
+    --brand-800: #0e3a6b;
+    --brand-900: #0a2b50;
+
+    /* 青蓝辅助色 */
+    --accent-50: #e8f8fb;
+    --accent-100: #d1f1f6;
+    --accent-300: #7fd4e2;
+    --accent-400: #3fc1d6;
+    --accent-500: #118aa0;
+    --accent-600: #0c6f83;
+    --accent-700: #08586a;
+
+    /* 功能色：成功 / 警示 / 错误 */
+    --success-50: #e4f7ef;
+    --success-500: #0e8a63;
+    --success-600: #0a7052;
+    --warning-50: #fdf1e3;
+    --warning-500: #e08a2e;
+    --warning-600: #c0741f;
+    --danger-50: #fbe8ea;
+    --danger-500: #be3a4a;
+    --danger-600: #9f2d3b;
+
+    /* 中性色 0–900 */
+    --neutral-0: #ffffff;
+    --neutral-50: #f8fafd;
+    --neutral-100: #eef2f8;
+    --neutral-200: #e0e7f1;
+    --neutral-300: #ccd8e6;
+    --neutral-400: #a2b3c7;
+    --neutral-500: #75879c;
+    --neutral-600: #5a6c80;
+    --neutral-700: #405264;
+    --neutral-800: #2a3b4d;
+    --neutral-900: #17263a;
+
+    /* 三个功能模块的强调色 */
+    --module-record: var(--warning-500);
+    --module-list: var(--brand-500);
+    --module-stats: var(--accent-500);
+
+    /* 语义映射：页面其余样式只引用这一层变量 */
+    --color-bg: var(--neutral-100);
+    --color-surface: var(--neutral-0);
+    --color-border: var(--neutral-200);
+    --color-text: var(--neutral-900);
+    --color-muted: var(--neutral-600);
+    --color-primary: var(--brand-600);
+    --color-primary-strong: var(--brand-900);
+    --color-primary-soft: var(--brand-50);
+    --color-accent: var(--accent-500);
+    --color-income: var(--success-500);
+    --color-expense: var(--danger-500);
+
+    /* 字号层级 */
+    --text-xs: 12px;
+    --text-sm: 13px;
+    --text-md: 15px;
+    --text-lg: 19px;
+    --text-xl: 22px;
+    --text-2xl: 32px;
+}
+
+/* ---------- 页面底色：背景图 + 高比例浅色遮罩 + 极淡点阵纹理 ---------- */
+
+body {
+    background-color: var(--neutral-100);
+    background-image:
+        radial-gradient(circle, rgba(26, 95, 168, 0.06) 0 1px, rgba(26, 95, 168, 0) 1.4px),
+        linear-gradient(180deg, rgba(242, 247, 253, 0.78) 0%, rgba(234, 241, 250, 0.76) 100%),
+        url("../../img/背景.png");
+    background-size: 24px 24px, auto, cover;
+    background-position: center, center, center;
+    background-repeat: repeat, no-repeat, no-repeat;
+    background-attachment: fixed;
+}
+
+/* ---------- 顶部标题栏：深色渐变 + 院徽水印 ---------- */
+
+.topbar {
+    overflow: hidden;
+    background: linear-gradient(115deg,
+        rgba(10, 43, 80, 0.9) 0%,
+        rgba(19, 74, 134, 0.87) 52%,
+        rgba(8, 86, 106, 0.85) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    -webkit-backdrop-filter: blur(10px) saturate(1.05);
+    backdrop-filter: blur(10px) saturate(1.05);
+}
+
+.topbar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("../../img/院徽.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 64px auto;
+    opacity: 0.08;
+    pointer-events: none;
+}
+
+.topbar > * {
+    position: relative;
+    z-index: 1;
+}
+
+.topbar__nav a.is-active,
+.topbar__nav a.is-active:hover {
+    color: var(--brand-800);
+    background: linear-gradient(180deg, var(--neutral-0) 0%, var(--brand-100) 100%);
+}
+
+/* ---------- 卡片基础：统一圆角阴影，模块顶部色条与角落光晕 ---------- */
+
+.card {
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.88);
+    background-repeat: no-repeat;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 26px rgba(20, 58, 106, 0.08);
+}
+
+/* 记录：暖橙 */
+#record-form {
+    background-image:
+        radial-gradient(240px 200px at 100% 0, rgba(224, 138, 46, 0.14), rgba(224, 138, 46, 0) 72%),
+        linear-gradient(90deg, var(--module-record) 0%, rgba(224, 138, 46, 0.35) 45%, rgba(224, 138, 46, 0) 100%);
+    background-size: auto, 100% 3px;
+    background-position: center, top left;
+}
+
+#record-form .card__title::before {
+    background: linear-gradient(180deg, var(--module-record), var(--warning-600));
+}
+
+/* 查看：蓝 */
+#record-list {
+    background-image:
+        radial-gradient(240px 200px at 100% 0, rgba(47, 123, 196, 0.14), rgba(47, 123, 196, 0) 72%),
+        linear-gradient(90deg, var(--module-list) 0%, rgba(47, 123, 196, 0.35) 45%, rgba(47, 123, 196, 0) 100%);
+    background-size: auto, 100% 3px;
+    background-position: center, top left;
+}
+
+#record-list .card__title::before {
+    background: linear-gradient(180deg, var(--module-list), var(--brand-700));
+}
+
+/* 统计：青 */
+#statistics {
+    background-image:
+        radial-gradient(240px 200px at 100% 0, rgba(17, 138, 160, 0.14), rgba(17, 138, 160, 0) 72%),
+        linear-gradient(90deg, var(--module-stats) 0%, rgba(17, 138, 160, 0.35) 45%, rgba(17, 138, 160, 0) 100%);
+    background-size: auto, 100% 3px;
+    background-position: center, top left;
+}
+
+#statistics .card__title::before {
+    background: linear-gradient(180deg, var(--module-stats), var(--accent-700));
+}
+
+/* ---------- 概览区：主视觉深色卡 ---------- */
+
+#overview {
+    padding: 28px;
+    color: var(--neutral-0);
+    background-color: var(--brand-900);
+    background-image:
+        radial-gradient(520px 340px at 2% -18%, rgba(86, 156, 217, 0.55), rgba(86, 156, 217, 0) 70%),
+        radial-gradient(480px 320px at 102% 116%, rgba(63, 193, 214, 0.5), rgba(63, 193, 214, 0) 70%),
+        linear-gradient(135deg, var(--brand-900) 0%, var(--brand-700) 55%, var(--accent-700) 115%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 44px rgba(10, 43, 80, 0.3);
+}
+
+#overview .card__title {
+    color: var(--neutral-0);
+}
+
+#overview .card__title::before {
+    background: linear-gradient(180deg, var(--accent-300), var(--accent-500));
+}
+
+#overview .stat-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: none;
+}
+
+#overview .stat-card::before {
+    display: none;
+}
+
+#overview .stat-card__label {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+#overview .stat-card__value {
+    color: var(--neutral-0);
+    font-size: var(--text-2xl);
+    text-shadow: 0 2px 12px rgba(4, 20, 40, 0.28);
+}
+
+#overview .stat-card--income .stat-card__value {
+    color: #8ff0c6;
+}
+
+#overview .stat-card--expense .stat-card__value {
+    color: #ffb3bb;
+}
+
+#overview .stat-card--balance {
+    background: rgba(255, 255, 255, 0.17);
+    border-color: rgba(127, 212, 226, 0.5);
+    box-shadow: 0 12px 30px rgba(4, 20, 40, 0.22),
+        inset 0 0 26px rgba(63, 193, 214, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+#overview .stat-card--balance .stat-card__label {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+#overview .stat-card--balance .stat-card__value {
+    color: var(--neutral-0);
+    font-size: 36px;
+    letter-spacing: 0.4px;
+}
+
+/* 余额卡略宽，形成主次层次 */
+@media (min-width: 901px) {
+    #overview .overview__cards {
+        grid-template-columns: 1fr 1fr 1.22fr;
+    }
+}
+
+/* ---------- 按钮与表单：同色系渐变 ---------- */
+
+.button--primary {
+    background: linear-gradient(135deg, var(--brand-600) 0%, var(--accent-600) 100%);
+    box-shadow: 0 6px 18px rgba(26, 95, 168, 0.3);
+}
+
+.button--primary:hover {
+    background: linear-gradient(135deg, var(--brand-700) 0%, var(--accent-700) 100%);
+    box-shadow: 0 8px 22px rgba(26, 95, 168, 0.36);
+}
+
+.form input:focus,
+.form select:focus,
+.filters input:focus,
+.filters select:focus {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 3px rgba(47, 123, 196, 0.18);
+}
+
+/* ---------- 需要精确阅读的区域：不透明度高于卡片 ---------- */
+
+.form input,
+.form select,
+.filters input,
+.filters select {
+    background-color: rgba(255, 255, 255, 0.97);
+}
+
+.records tbody tr {
+    background-color: rgba(255, 255, 255, 0.96);
+}
+
+/* ---------- 账单表格：同色系表头渐变 ---------- */
+
+.records thead th {
+    background: linear-gradient(180deg, var(--brand-50) 0%, #d8e8f8 100%);
+    color: var(--brand-800);
+    border-bottom-color: var(--brand-200);
+}
+
+.records tbody tr:nth-child(even) {
+    background: var(--neutral-50);
+}
+
+.records tbody tr:hover {
+    background: var(--brand-50);
+}
+
+/* ---------- 类别汇总 ---------- */
+
+.category-list li {
+    background: linear-gradient(90deg, var(--neutral-50) 0%, var(--neutral-0) 100%);
+    border-color: var(--neutral-200);
+}
+
+.category-list li:hover {
+    background: linear-gradient(90deg, var(--brand-50) 0%, var(--neutral-0) 100%);
+    border-color: var(--brand-300);
+}
+
+/* ---------- 图表容器：分区渐变空状态（不隐藏、不锁死子节点） ---------- */
+
+.chart {
+    overflow: visible;
+    border: 1px solid var(--brand-200);
+    background-color: #f2f8fe;
+    background-image:
+        radial-gradient(460px 220px at 12% 8%, rgba(47, 123, 196, 0.22), rgba(47, 123, 196, 0) 72%),
+        radial-gradient(460px 220px at 90% 94%, rgba(17, 138, 160, 0.2), rgba(17, 138, 160, 0) 72%),
+        repeating-linear-gradient(0deg, rgba(26, 95, 168, 0.055) 0 1px, rgba(26, 95, 168, 0) 1px 44px),
+        repeating-linear-gradient(90deg, rgba(26, 95, 168, 0.055) 0 1px, rgba(26, 95, 168, 0) 1px 72px);
+}
+
+.chart:empty::before {
+    content: "暂无图表数据\A 添加记录后自动生成趋势图";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neutral-600);
+    font-size: var(--text-sm);
+    line-height: 1.9;
+    letter-spacing: 0.6px;
+    white-space: pre;
+    text-align: center;
+}
+
+/* ---------- 页脚：深色区块，与顶栏呼应 ---------- */
+
+.shell-footer {
+    position: relative;
+    max-width: none;
+    margin: 48px 0 0;
+    padding: 26px 24px 30px;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.75);
+    background-color: rgba(10, 43, 80, 0.7);
+    background-image: linear-gradient(135deg,
+        rgba(10, 43, 80, 0.72) 0%,
+        rgba(19, 74, 134, 0.7) 62%,
+        rgba(8, 86, 106, 0.7) 118%);
+    -webkit-backdrop-filter: blur(7px);
+    backdrop-filter: blur(7px);
+    border-top: 1px solid rgba(63, 193, 214, 0.4);
+    text-align: center;
+}
+
+.shell-footer::before {
+    content: "";
+    position: absolute;
+    right: 6%;
+    top: 50%;
+    width: 120px;
+    height: 120px;
+    background: url("../../img/校徽.png") center / contain no-repeat;
+    opacity: 0.07;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.shell-footer::after {
+    content: "福州大学 · 计算机与大数据学院";
+    display: block;
+    margin-top: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-shadow: 0 1px 3px rgba(4, 20, 40, 0.5);
+}
+
+.shell-footer > * {
+    position: relative;
+    z-index: 1;
+}
+
+.shell-footer__text {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--text-xs);
+    text-shadow: 0 1px 3px rgba(4, 20, 40, 0.5);
+}
+
+/* ---------- 窄屏适配 ---------- */
+
+@media (max-width: 900px) {
+    .topbar::before {
+        display: none;
+    }
+
+    #overview {
+        padding: 20px;
+    }
+
+    #overview .stat-card--balance .stat-card__value {
+        font-size: 28px;
+    }
+
+    .shell-footer::before {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    #overview .stat-card__value {
+        font-size: 24px;
+    }
+
+    #overview .stat-card--balance .stat-card__value {
+        font-size: 26px;
+    }
+
+    .shell-footer {
+        margin-top: 32px;
+        padding: 22px 16px 24px;
+    }
+}

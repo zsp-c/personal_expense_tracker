@@ -1,313 +1,148 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>小账本 · 个人记账本</title>
-  <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人记账本</title>
+    <link rel="icon" type="image/png" href="../img/校徽.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/shell.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/visual.css">
 </head>
 <body>
-<!--
-  个人记账本 · 页面骨架（成员 F / 06）
-  负责：页面整体结构、导航切换、各功能模块的挂载容器。
-  不包含真实的记账 / 查询 / 统计逻辑，相关脚本由其他成员接入。
-
-  挂载点（与仓库中队友模块的 DOM 约定保持一致）：
-  · 收支概览：#total-income / #total-expense / #total-balance（成员 I）
-  · 记账表单：#record-form-element、#type、#amount、#date、#category、#remark、#form-message（成员 G）
-  · 历史账单：#filter-start-date、#filter-end-date、#filter-type、#filter-category、#filter-apply、
-             #record-list-body、#load-more、#records-message（成员 H）
-  · 统计区域：#stats-start-date、#stats-end-date、#stats-apply、#category-stats、#chart（成员 I）
-
-  脚本分工：api.js / records.js / statistics.js / main.js 由队友维护；
-  js/nav.js 为本页面的导航切换。
--->
-
-<header class="app-header">
-  <div class="app-header__inner">
-    <div class="brand">
-      <span class="brand__mark" aria-hidden="true">¥</span>
-      <div class="brand__text">
-        <h1 class="brand__title">小账本</h1>
-        <p class="brand__subtitle">记录每一笔收支，心里更有数</p>
-      </div>
-    </div>
-    <p class="app-header__note">数据保存在本机 · 无需登录</p>
-  </div>
-</header>
-
-<nav class="app-nav" aria-label="页面导航">
-  <div class="app-nav__inner" role="tablist" aria-label="功能切换">
-    <button class="nav-tab is-active" id="tab-record" type="button" role="tab"
-            aria-selected="true" aria-controls="record-form" data-section="record-form">
-      <span class="nav-tab__icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
-      </span>
-      记录
-    </button>
-    <button class="nav-tab" id="tab-records" type="button" role="tab"
-            aria-selected="false" aria-controls="record-list" data-section="record-list">
-      <span class="nav-tab__icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M8 6h12M8 12h12M8 18h12M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>
-        </svg>
-      </span>
-      查看
-    </button>
-    <button class="nav-tab" id="tab-stats" type="button" role="tab"
-            aria-selected="false" aria-controls="statistics" data-section="statistics">
-      <span class="nav-tab__icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-          <path d="M5 20v-7M12 20V5M19 20v-10M3 20h18"/>
-        </svg>
-      </span>
-      统计
-    </button>
-  </div>
-</nav>
-
-<main class="app-main">
-  <noscript>
-    <p class="noscript-tip">当前浏览器未启用 JavaScript，导航切换将无法使用。</p>
-  </noscript>
-
-  <!-- ========== 收支概览（仪表盘，成员 I 接入数据） ========== -->
-  <section class="overview" id="overview" aria-label="收支概览">
-    <article class="overview-card overview-card--income">
-      <p class="overview-card__label">总收入</p>
-      <p class="overview-card__value" id="total-income">--</p>
-    </article>
-    <article class="overview-card overview-card--expense">
-      <p class="overview-card__label">总支出</p>
-      <p class="overview-card__value" id="total-expense">--</p>
-    </article>
-    <article class="overview-card overview-card--balance">
-      <p class="overview-card__label">当前结余</p>
-      <p class="overview-card__value" id="total-balance">--</p>
-    </article>
-  </section>
-
-  <!-- ========== 记录：新增记账表单（成员 G 接入） ========== -->
-  <section class="panel" id="record-form" role="tabpanel" aria-labelledby="tab-record">
-    <div class="panel__head">
-      <h2 class="panel__title">记一笔</h2>
-      <p class="panel__desc">选择收支类型，填好金额、日期和类别，就能记下这一笔。</p>
-    </div>
-
-    <form class="record-form" id="record-form-element" autocomplete="off">
-      <div class="field">
-        <label class="field__label" for="type">类型</label>
-        <select class="input" id="type" name="type" required>
-          <option value="expense">支出</option>
-          <option value="income">收入</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="amount">金额</label>
-        <div class="input-affix">
-          <span class="input-affix__prefix" aria-hidden="true">¥</span>
-          <input class="input" type="number" id="amount" name="amount"
-                 inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" required>
+    <!-- 顶部导航：模块负责人 成员 F -->
+    <header class="topbar">
+        <div class="shell-brand">
+            <img class="shell-brand__logo" src="../img/校徽.png" alt="福州大学校徽">
+            <img class="shell-brand__logo" src="../img/院徽.png" alt="福州大学计算机与大数据学院院徽">
+            <h1 class="topbar__title">个人记账本</h1>
         </div>
-        <p class="field__hint">按元填写，最多保留两位小数。</p>
-      </div>
+        <nav class="topbar__nav">
+            <a href="#record-form" class="is-active">记录</a>
+            <a href="#record-list">查看</a>
+            <a href="#statistics">统计</a>
+        </nav>
+    </header>
 
-      <div class="field">
-        <label class="field__label" for="date">日期</label>
-        <input class="input" type="date" id="date" name="date" required>
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="category">类别</label>
-        <input class="input" type="text" id="category" name="category"
-               maxlength="30" list="category-options" placeholder="例如：饮食" required>
-        <datalist id="category-options">
-          <option value="饮食"></option>
-          <option value="交通"></option>
-          <option value="购物"></option>
-          <option value="居住"></option>
-          <option value="娱乐"></option>
-          <option value="医疗"></option>
-          <option value="教育"></option>
-          <option value="工资"></option>
-          <option value="奖金"></option>
-          <option value="其他"></option>
-        </datalist>
-      </div>
-
-      <div class="field field--full">
-        <label class="field__label" for="remark">备注<span class="field__optional">（选填）</span></label>
-        <input class="input" type="text" id="remark" name="remark"
-               maxlength="200" placeholder="例如：和同学吃午饭">
-      </div>
-
-      <div class="form-actions">
-        <button class="btn btn--primary" type="submit">保存记录</button>
-        <button class="btn btn--ghost" type="reset">清空</button>
-        <p class="form-status" id="form-message" role="status" aria-live="polite"></p>
-      </div>
-    </form>
-  </section>
-
-  <!-- ========== 查看：历史账单（成员 H 接入） ========== -->
-  <section class="panel" id="record-list" role="tabpanel" aria-labelledby="tab-records" hidden>
-    <div class="panel__head">
-      <h2 class="panel__title">历史账单</h2>
-      <p class="panel__desc">默认显示最近 10 条记录，可以按日期、类型和类别筛选。</p>
-    </div>
-
-    <div class="filters">
-      <div class="filter">
-        <label class="filter__label" for="filter-start-date">开始日期</label>
-        <input class="input" type="date" id="filter-start-date">
-      </div>
-      <div class="filter">
-        <label class="filter__label" for="filter-end-date">结束日期</label>
-        <input class="input" type="date" id="filter-end-date">
-      </div>
-      <div class="filter">
-        <label class="filter__label" for="filter-type">类型</label>
-        <select class="input" id="filter-type">
-          <option value="">全部类型</option>
-          <option value="expense">支出</option>
-          <option value="income">收入</option>
-        </select>
-      </div>
-      <div class="filter">
-        <label class="filter__label" for="filter-category">类别</label>
-        <input class="input" type="text" id="filter-category" placeholder="全部类别">
-      </div>
-      <div class="filters__actions">
-        <button class="btn btn--primary btn--sm" id="filter-apply" type="button">查询</button>
-      </div>
-    </div>
-
-    <p class="table-note">下方为布局占位示例，接入真实数据后由账单列表模块替换。</p>
-
-    <div class="table-wrap">
-      <table class="records-table">
-        <thead>
-          <tr>
-            <th scope="col">日期</th>
-            <th scope="col">类型</th>
-            <th scope="col">类别</th>
-            <th scope="col" class="is-num">金额（元）</th>
-            <th scope="col">备注</th>
-            <th scope="col" class="is-action">操作</th>
-          </tr>
-        </thead>
-        <tbody id="record-list-body">
-          <tr>
-            <td>2026-11-07</td>
-            <td><span class="tag tag--expense">支出</span></td>
-            <td>饮食</td>
-            <td class="is-num is-expense">-35.50</td>
-            <td>食堂午餐 <span class="tag tag--demo">示例</span></td>
-            <td class="is-action"><button class="btn btn--link" type="button" disabled>删除</button></td>
-          </tr>
-          <tr>
-            <td>2026-11-06</td>
-            <td><span class="tag tag--income">收入</span></td>
-            <td>工资</td>
-            <td class="is-num is-income">+5,000.00</td>
-            <td>十月工资 <span class="tag tag--demo">示例</span></td>
-            <td class="is-action"><button class="btn btn--link" type="button" disabled>删除</button></td>
-          </tr>
-          <tr>
-            <td>2026-11-05</td>
-            <td><span class="tag tag--expense">支出</span></td>
-            <td>交通</td>
-            <td class="is-num is-expense">-12.00</td>
-            <td>地铁通勤 <span class="tag tag--demo">示例</span></td>
-            <td class="is-action"><button class="btn btn--link" type="button" disabled>删除</button></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="panel__foot">
-      <button class="btn btn--ghost" id="load-more" type="button">查看更多</button>
-    </div>
-    <p class="form-status" id="records-message" role="status" aria-live="polite"></p>
-  </section>
-
-  <!-- ========== 统计：收支统计与图表（成员 I 接入） ========== -->
-  <section class="panel" id="statistics" role="tabpanel" aria-labelledby="tab-stats" hidden>
-    <div class="panel__head">
-      <h2 class="panel__title">收支统计</h2>
-      <p class="panel__desc">按日期范围查看收支情况，类别汇总帮你弄清钱花在了哪里。收入、支出与结余见上方概览卡片。</p>
-    </div>
-
-    <div class="filters">
-      <div class="filter">
-        <label class="filter__label" for="stats-start-date">开始日期</label>
-        <input class="input" type="date" id="stats-start-date">
-      </div>
-      <div class="filter">
-        <label class="filter__label" for="stats-end-date">结束日期</label>
-        <input class="input" type="date" id="stats-end-date">
-      </div>
-      <div class="filters__actions">
-        <button class="btn btn--primary btn--sm" id="stats-apply" type="button">查询</button>
-      </div>
-    </div>
-
-    <div class="stats-grid">
-      <section class="stats-block" aria-labelledby="category-title">
-        <h3 id="category-title">类别汇总</h3>
-        <p class="stats-block__hint">布局占位，数值由统计模块填入。</p>
-        <ul class="category-list" id="category-stats">
-          <li class="category-item">
-            <div class="category-item__head">
-              <span>饮食</span>
-              <span class="category-item__amount">—</span>
+    <main class="layout">
+        <!-- 收支概览：成员 I -->
+        <section id="overview" class="card overview">
+            <h2 class="card__title">收支概览</h2>
+            <div class="overview__cards">
+                <article class="stat-card stat-card--income">
+                    <p class="stat-card__label">总收入</p>
+                    <p class="stat-card__value" id="total-income">--</p>
+                </article>
+                <article class="stat-card stat-card--expense">
+                    <p class="stat-card__label">总支出</p>
+                    <p class="stat-card__value" id="total-expense">--</p>
+                </article>
+                <article class="stat-card stat-card--balance">
+                    <p class="stat-card__label">当前结余</p>
+                    <p class="stat-card__value" id="total-balance">--</p>
+                </article>
             </div>
-            <div class="category-item__bar"><span style="width: 46%"></span></div>
-          </li>
-          <li class="category-item">
-            <div class="category-item__head">
-              <span>居住</span>
-              <span class="category-item__amount">—</span>
-            </div>
-            <div class="category-item__bar"><span style="width: 27%"></span></div>
-          </li>
-          <li class="category-item">
-            <div class="category-item__head">
-              <span>购物</span>
-              <span class="category-item__amount">—</span>
-            </div>
-            <div class="category-item__bar"><span style="width: 17%"></span></div>
-          </li>
-          <li class="category-item">
-            <div class="category-item__head">
-              <span>交通</span>
-              <span class="category-item__amount">—</span>
-            </div>
-            <div class="category-item__bar"><span style="width: 10%"></span></div>
-          </li>
-        </ul>
-      </section>
+        </section>
 
-      <section class="stats-block" aria-labelledby="chart-title">
-        <h3 id="chart-title">图表</h3>
-        <p class="stats-block__hint">可选：支出类别占比或收支对比（ECharts）。</p>
-        <div class="chart-box" id="chart" hidden>图表区域</div>
-      </section>
-    </div>
-  </section>
-</main>
+        <!-- 新增记账表单：成员 G -->
+        <section id="record-form" class="card">
+            <h2 class="card__title">新增记账</h2>
+            <form id="record-form-element" class="form">
+                <div class="form__field">
+                    <label for="type">类型</label>
+                    <select id="type" name="type" required>
+                        <option value="expense">支出</option>
+                        <option value="income">收入</option>
+                    </select>
+                </div>
 
-<footer class="app-footer">
-  个人记账本 V1.0 · 本地保存，数据只属于你
-</footer>
+                <div class="form__field">
+                    <label for="amount">金额（元）</label>
+                    <input id="amount" name="amount" type="number" min="0.01" step="0.01" required>
+                </div>
 
-<script src="js/api.js"></script>
-<script src="js/records.js"></script>
-<script src="js/statistics.js"></script>
-<script src="js/main.js"></script>
-<script src="js/nav.js"></script>
+                <div class="form__field">
+                    <label for="date">日期</label>
+                    <input id="date" name="date" type="date" required>
+                </div>
+
+                <div class="form__field">
+                    <label for="category">类别</label>
+                    <input id="category" name="category" type="text" maxlength="30" required>
+                </div>
+
+                <div class="form__field">
+                    <label for="remark">备注</label>
+                    <input id="remark" name="remark" type="text" maxlength="200">
+                </div>
+
+                <button type="submit" class="button button--primary">保存</button>
+                <p id="form-message" class="form__message" role="status"></p>
+            </form>
+        </section>
+
+        <!-- 历史账单列表：成员 H -->
+        <section id="record-list" class="card">
+            <h2 class="card__title">历史账单</h2>
+            <div class="filters">
+                <input id="filter-start-date" type="date" aria-label="开始日期">
+                <input id="filter-end-date" type="date" aria-label="结束日期">
+                <select id="filter-type" aria-label="类型">
+                    <option value="">全部类型</option>
+                    <option value="income">收入</option>
+                    <option value="expense">支出</option>
+                </select>
+                <input id="filter-category" type="text" placeholder="类别" aria-label="类别">
+                <button id="filter-apply" type="button" class="button">筛选</button>
+            </div>
+
+            <table class="records">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>类型</th>
+                        <th>类别</th>
+                        <th>金额（元）</th>
+                        <th>备注</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="record-list-body">
+                    <!-- 由 records.js 渲染 -->
+                </tbody>
+            </table>
+
+            <button id="load-more" type="button" class="button">查看更多</button>
+            <p id="records-message" class="form__message" role="status"></p>
+        </section>
+
+        <!-- 统计展示：成员 I -->
+        <section id="statistics" class="card">
+            <h2 class="card__title">统计</h2>
+            <div class="filters">
+                <input id="stats-start-date" type="date" aria-label="统计开始日期">
+                <input id="stats-end-date" type="date" aria-label="统计结束日期">
+                <button id="stats-apply" type="button" class="button">统计</button>
+            </div>
+
+            <h3 class="card__subtitle">按类别汇总</h3>
+            <ul id="category-stats" class="category-list">
+                <!-- 由 statistics.js 渲染 -->
+            </ul>
+
+            <!-- 可选：ECharts 图表挂载点 -->
+            <div id="chart" class="chart" hidden></div>
+        </section>
+    </main>
+
+    <footer class="shell-footer">
+        <p class="shell-footer__text">© 蛋仔派队 版权所有<br>Copyright © 2026 All Rights Reserved</p>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/records.js"></script>
+    <script src="js/statistics.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>

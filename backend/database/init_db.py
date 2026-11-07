@@ -9,9 +9,10 @@ from database.connection import get_connection
 def init_database() -> None:
     """创建数据表（幂等，可重复调用）。
 
-    TODO(成员 B)：
-    - 按 docs/DEVELOPMENT_GUIDE.md 第 3.1 节完善 records 表字段与约束。
-    - 如需索引，在此处一并创建。
+    表结构与 docs/DEVELOPMENT_GUIDE.md 第 3.1 节保持一致：
+    - type 仅允许 income / expense；
+    - amount 为整数分，且必须大于 0；
+    - created_at 默认使用数据库当前时间。
     """
     conn = get_connection()
 

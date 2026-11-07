@@ -5,22 +5,197 @@
 
     let currentOffset = 0;
 
-    /** 初始化新增记账表单。TODO(成员 G) */
+    /** 初始化新增记账表单 —— 成员 G */
     function initRecordForm() {
         const form = document.getElementById("record-form-element");
         if (!form) return;
 
-        // TODO(成员 G)：
-        // 1. 默认日期设为今天。
-        // 2. 拦截 submit，读取字段。
-        // 3. amount 使用 yuanToFen 转成分。
-        // 4. 调用 api.createRecord。
-        // 5. 成功后清空表单、刷新列表和统计。
-        // 6. 失败时在 #form-message 展示错误。
+        const typeInput = document.getElementById("type");
+        const amountInput = document.getElementById("amount");
+        const dateInput = document.getElementById("date");
+        const categoryInput = document.getElementById("category");
+        const remarkInput = document.getElementById("remark");
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        // 日期默认今天，且不允许选择未来日期
+        const today = toISODate(new Date());
+        if (dateInput) {
+            dateInput.value = today;
+            dateInput.max = today;
+        }
+
+        syncTypeState(form, typeInput);
+
+        if (typeInput) {
+            typeInput.addEventListener("change", () => {
+                syncTypeState(form, typeInput);
+            });
+        }
+
+        [
+            [amountInput, "amount"],
+            [dateInput, "date"],
+            [categoryInput, "category"],
+        ].forEach(([input, key]) => {
+            if (!input) return;
+            input.addEventListener("input", () => clearFieldError(form, key));
+            input.addEventListener("change", () => clearFieldError(form, key));
+        });
+
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
-            setFormMessage("待实现：成员 G");
+            if (submitButton && submitButton.disabled) return;
+
+            const fields = { typeInput, amountInput, dateInput, categoryInput, remarkInput };
+            const result = validateRecord(fields);
+
+            if (!result.valid) {
+                Object.keys(result.errors).forEach((key) => {
+                    setFieldError(form, key, result.errors[key]);
+                });
+                setFormMessage(form, "请先修正标红的字段", "error");
+                const firstInvalid = form.querySelector(".form__field.is-invalid input, .form__field.is-invalid select");
+                if (firstInvalid) firstInvalid.focus();
+                return;
+            }
+
+            setSubmitting(submitButton, true);
+            setFormMessage(form, "正在保存…");
+
+            try {
+                if (typeof api === "undefined" || typeof api.createRecord !== "function") {
+                    throw new Error("API 未加载，无法保存");
+                }
+
+                await api.createRecord({
+                    type: result.data.type,
+                    amount: result.data.amount,
+                    date: result.data.date,
+                    category: result.data.category,
+                    remark: result.data.remark,
+                });
+
+                // 只清空金额和备注，日期与类别保留，方便连续记账
+                if (amountInput) amountInput.value = "";
+                if (remarkInput) remarkInput.value = "";
+                clearFieldError(form, "amount");
+
+                setFormMessage(
+                    form,
+                    `保存成功：${result.data.date} ${result.data.category} ${result.data.amountYuan.toFixed(2)} 元`,
+                    "success"
+                );
+
+                // 通知列表与统计模块刷新（statistics.js 监听该事件）
+                document.dispatchEvent(new CustomEvent("records:changed"));
+                window.dispatchEvent(new CustomEvent("records:changed"));
+            } catch (error) {
+                const message = error && error.name === "TypeError"
+                    ? "无法连接后端服务，请确认后端已启动"
+                    : (error && error.message) || "请稍后重试";
+                setFormMessage(form, `保存失败：${message}`, "error");
+            } finally {
+                setSubmitting(submitButton, false);
+            }
         });
+    }
+
+    /** 表单校验：金额、日期、类别，返回 {valid, data, errors} */
+    function validateRecord(fields) {
+        const errors = {};
+        const { typeInput, amountInput, dateInput, categoryInput, remarkInput } = fields;
+
+        const type = typeInput && typeInput.value === "income" ? "income" : "expense";
+
+        const amountText = amountInput ? amountInput.value.trim() : "";
+        let amountYuan = 0;
+        if (!amountText) {
+            errors.amount = "请输入金额";
+        } else if (!/^\d+(\.\d{1,2})?$/.test(amountText)) {
+            errors.amount = "金额格式不正确，最多两位小数";
+        } else {
+            amountYuan = Number(amountText);
+            if (!(amountYuan > 0)) errors.amount = "金额必须大于 0";
+        }
+
+        const date = dateInput ? dateInput.value : "";
+        const today = toISODate(new Date());
+        if (!date) {
+            errors.date = "请选择日期";
+        } else if (date > today) {
+            errors.date = "日期不能晚于今天";
+        }
+
+        const category = categoryInput ? categoryInput.value.trim() : "";
+        if (!category) errors.category = "请选择类别";
+
+        const valid = Object.keys(errors).length === 0;
+
+        return {
+            valid,
+            errors,
+            data: valid
+                ? {
+                    type,
+                    amount: yuanToFen(amountYuan),
+                    amountYuan,
+                    date,
+                    category,
+                    remark: remarkInput ? remarkInput.value.trim() : "",
+                }
+                : null,
+        };
+    }
+
+    /** 本地日期转 YYYY-MM-DD，避免时区导致日期偏移 */
+    function toISODate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
+    /** 收支类型切换时同步表单配色状态 */
+    function syncTypeState(form, typeInput) {
+        if (!form) return;
+        const isIncome = typeInput && typeInput.value === "income";
+        form.classList.toggle("is-income", Boolean(isIncome));
+        form.classList.toggle("is-expense", !isIncome);
+    }
+
+    /** 字段级错误：显示提示并标记字段 */
+    function setFieldError(form, key, message) {
+        const field = form.querySelector(`.form__field--${key}`);
+        const errorNode = document.getElementById(`${key}-error`);
+        if (field) field.classList.add("is-invalid");
+        if (errorNode) {
+            errorNode.textContent = message;
+            errorNode.hidden = false;
+        }
+    }
+
+    /** 清除单个字段的错误状态 */
+    function clearFieldError(form, key) {
+        const field = form.querySelector(`.form__field--${key}`);
+        const errorNode = document.getElementById(`${key}-error`);
+        if (field) field.classList.remove("is-invalid");
+        if (errorNode) {
+            errorNode.textContent = "";
+            errorNode.hidden = true;
+        }
+    }
+
+    /** 提交中禁用按钮，防止重复点击 */
+    function setSubmitting(button, submitting) {
+        if (!button) return;
+        if (submitting) {
+            button.dataset.idleText = button.textContent;
+            button.textContent = "保存中…";
+            button.disabled = true;
+        } else {
+            button.textContent = button.dataset.idleText || "保存";
+            button.disabled = false;
+        }
     }
 
     /** 加载账单列表。TODO(成员 H) */
@@ -92,9 +267,14 @@
         }
     }
 
-    function setFormMessage(text) {
+    /** 表单顶部/底部反馈：使用现有的 #form-message，不新造提示组件 */
+    function setFormMessage(form, text, tone) {
         const node = document.getElementById("form-message");
-        if (node) node.textContent = text;
+        if (!node) return;
+        node.textContent = text;
+        node.classList.remove("form__message--success", "form__message--error");
+        if (tone === "success") node.classList.add("form__message--success");
+        if (tone === "error") node.classList.add("form__message--error");
     }
 
     window.RecordsModule = {

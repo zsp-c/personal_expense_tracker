@@ -7,6 +7,7 @@
     <title>个人记账本 - 记录</title>
     <link rel="icon" type="image/png" href="img/校徽.png">
     <link rel="stylesheet" href="css/style.css">
+
 </head>
 <body>
     <!-- 顶部导航：模块负责人 成员 F -->
@@ -17,8 +18,6 @@
             <h1 class="topbar__title">个人记账本</h1>
         </div>
         <nav class="topbar__nav">
-            <a href="index.html#record-form" class="is-active">记录</a>
-            <a href="index.html#record-list">查看</a>
             <a href="statistics.html">统计</a>
         </nav>
     </header>
@@ -27,8 +26,8 @@
         <!-- 新增记账表单：成员 G -->
         <section id="record-form" class="card">
             <h2 class="card__title">新增记账</h2>
-            <form id="record-form-element" class="form">
-                <div class="form__field">
+            <form id="record-form-element" class="form" novalidate>
+                <div class="form__field form__field--type">
                     <label for="type">类型</label>
                     <select id="type" name="type" required>
                         <option value="expense">支出</option>
@@ -36,28 +35,50 @@
                     </select>
                 </div>
 
-                <div class="form__field">
+                <div class="form__field form__field--amount">
                     <label for="amount">金额（元）</label>
-                    <input id="amount" name="amount" type="number" min="0.01" step="0.01" required>
+                    <input id="amount" name="amount" type="number" inputmode="decimal" min="0.01" step="0.01"
+                        placeholder="0.00" autocomplete="off" required aria-describedby="amount-error">
+                    <p class="form__hint">需大于 0，最多两位小数</p>
+                    <p class="form__error" id="amount-error" hidden></p>
                 </div>
 
-                <div class="form__field">
+                <div class="form__field form__field--date">
                     <label for="date">日期</label>
-                    <input id="date" name="date" type="date" required>
+                    <input id="date" name="date" type="date" required aria-describedby="date-error">
+                    <p class="form__error" id="date-error" hidden></p>
                 </div>
 
-                <div class="form__field">
+                <div class="form__field form__field--category">
                     <label for="category">类别</label>
-                    <input id="category" name="category" type="text" maxlength="30" required>
+                    <select id="category" name="category" required aria-describedby="category-error">
+                        <option value="">请选择类别</option>
+                        <option value="饮食">饮食</option>
+                        <option value="交通">交通</option>
+                        <option value="购物">购物</option>
+                        <option value="居住">居住</option>
+                        <option value="娱乐">娱乐</option>
+                        <option value="医疗">医疗</option>
+                        <option value="教育">教育</option>
+                        <option value="工资">工资</option>
+                        <option value="奖金">奖金</option>
+                        <option value="兼职">兼职</option>
+                        <option value="理财">理财</option>
+                        <option value="其他">其他</option>
+                    </select>
+                    <p class="form__error" id="category-error" hidden></p>
                 </div>
 
-                <div class="form__field">
-                    <label for="remark">备注</label>
-                    <input id="remark" name="remark" type="text" maxlength="200">
+                <div class="form__field form__field--remark">
+                    <label for="remark">备注<span class="form__hint">（选填）</span></label>
+                    <input id="remark" name="remark" type="text" maxlength="200" placeholder="例如：午餐"
+                        autocomplete="off">
                 </div>
 
-                <button type="submit" class="button button--primary">保存</button>
-                <p id="form-message" class="form__message" role="status"></p>
+                <div class="form__actions">
+                    <button type="submit" class="button button--primary">保存</button>
+                    <p id="form-message" class="form__message" role="status" aria-live="polite"></p>
+                </div>
             </form>
         </section>
 

@@ -3,45 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="个人记账本：收支概览与分类统计">
-    <title>个人记账本 - 统计</title>
-    <link rel="icon" type="image/png" href="img/校徽.png">
-    <link rel="stylesheet" href="css/style.css">
-</head>
+
 <body>
     <!-- 顶部导航：模块负责人 成员 F -->
     <header class="topbar">
         <div class="shell-brand">
-            <img class="shell-brand__logo" src="img/校徽.png" alt="福州大学校徽">
-            <img class="shell-brand__logo" src="img/院徽.png" alt="福州大学计算机与大数据学院院徽">
+
             <h1 class="topbar__title">个人记账本</h1>
         </div>
         <nav class="topbar__nav">
             <a href="index.html#record-form">记录</a>
-            <a href="index.html#record-list">查看</a>
+
             <a href="statistics.html" class="is-active">统计</a>
         </nav>
     </header>
 
     <main class="layout">
-        <!-- 收支概览：成员 I -->
-        <section id="overview" class="card">
-            <h2 class="card__title">收支概览</h2>
-            <div class="overview__cards">
-                <article class="stat-card stat-card--income">
-                    <p class="stat-card__label">总收入</p>
-                    <p class="stat-card__value" id="total-income">--</p>
-                </article>
-                <article class="stat-card stat-card--expense">
-                    <p class="stat-card__label">总支出</p>
-                    <p class="stat-card__value" id="total-expense">--</p>
-                </article>
-                <article class="stat-card stat-card--balance">
-                    <p class="stat-card__label">当前结余</p>
-                    <p class="stat-card__value" id="total-balance">--</p>
-                </article>
-            </div>
-        </section>
 
         <!-- 统计展示：成员 I -->
         <section id="statistics" class="card">
@@ -56,6 +33,7 @@
             <ul id="category-stats" class="category-list">
                 <!-- 由 statistics.js 渲染 -->
             </ul>
+
 
             <div id="chart" class="chart" hidden></div>
         </section>

@@ -54,89 +54,12 @@
         };
     }
 
-    function setLoadMoreVisible(visible) {
-        const more = byId("load-more");
-        if (more) more.hidden = !visible;
-    }
 
-    /** 初始化新增记账表单。成员 G。 */
     function initRecordForm() {
         const form = byId("record-form-element");
         if (!form) return;
 
-        const dateInput = byId("date");
-        if (dateInput && !dateInput.value) dateInput.value = todayISO();
 
-        form.addEventListener("submit", async (event) => {
-            event.preventDefault();
-
-            const amountFen = yuanToFen(inputValue("amount"));
-            const category = inputValue("category");
-
-            if (!Number.isFinite(amountFen) || amountFen <= 0) {
-                setMessage("form-message", "请输入大于 0 的金额", false);
-                return;
-            }
-            if (!category) {
-                setMessage("form-message", "请填写类别", false);
-                return;
-            }
-
-            const payload = {
-                date: inputValue("date") || todayISO(),
-                type: inputValue("type") || "expense",
-                amount: amountFen,
-                category: category,
-                remark: inputValue("remark"),
-            };
-
-            setMessage("form-message", "保存中…", true);
-            try {
-                await api.createRecord(payload);
-                form.reset();
-                if (dateInput) dateInput.value = todayISO();
-                loadedCount = 0;
-                await loadRecords({ message: "已保存，列表已刷新" });
-                notifyChanged();
-            } catch (error) {
-                setMessage("form-message", "保存失败：" + errorText(error), false);
-            }
-        });
-    }
-
-    /** 加载账单列表。成员 H。 */
-    async function loadRecords({ append = false, message = "" } = {}) {
-        if (loading) return;
-        loading = true;
-
-        const offset = append ? loadedCount : 0;
-
-        try {
-            const records = await api.getRecords({
-                ...readFilters(),
-                limit: PAGE_SIZE,
-                offset: offset,
-            });
-
-            renderRecords(records, append);
-            loadedCount = offset + records.length;
-            setLoadMoreVisible(records.length === PAGE_SIZE);
-
-            if (message) {
-                setMessage("records-message", message, true);
-            } else if (records.length === 0 && !append) {
-                setMessage("records-message", "没有符合条件的记录", false);
-            } else if (records.length === 0 && append) {
-                setMessage("records-message", "没有更多记录了", true);
-            } else {
-                setMessage("records-message", `已加载 ${loadedCount} 条记录`, true);
-            }
-        } catch (error) {
-            setMessage("records-message", "加载失败：" + errorText(error), false);
-        } finally {
-            loading = false;
-        }
-    }
 
     /** 渲染账单行；文本统一使用 textContent。成员 H。 */
     function renderRecords(records, append = false) {
@@ -231,6 +154,7 @@
             });
         }
     }
+
 
     window.RecordsModule = {
         initRecordForm,

@@ -9,6 +9,8 @@
     let hasMore = false;
     // 防止重复请求（加载中再次点击筛选 / 查看更多）
     let loading = false;
+    // 防止重复导出
+    let exporting = false;
 
     /** 初始化新增记账表单 —— 成员 G */
     function initRecordForm() {
@@ -443,10 +445,69 @@
         window.dispatchEvent(new CustomEvent("records:changed"));
     }
 
+    /** 导出文件名，与后端 Content-Disposition 里的命名保持一致 */
+    function exportFileName() {
+        const now = new Date();
+        const pad = (value) => String(value).padStart(2, "0");
+        return `账单_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}.xlsx`;
+    }
+
+    /** 导出 Excel：按当前筛选条件请求 xlsx，再用临时 <a download> 触发下载 */
+    async function handleExport(button) {
+        if (exporting) return;
+
+        const filters = readFilters();
+        if (filters.start_date && filters.end_date && filters.start_date > filters.end_date) {
+            setRecordsMessage("开始日期不能晚于结束日期", "error");
+            return;
+        }
+
+        exporting = true;
+        const originalText = button ? button.textContent : "";
+        if (button) {
+            button.disabled = true;
+            button.textContent = "导出中…";
+        }
+        setRecordsMessage("正在导出 Excel…");
+
+        try {
+            if (typeof api === "undefined" || typeof api.exportRecords !== "function") {
+                throw new Error("API 未加载，无法导出");
+            }
+
+            const blob = await api.exportRecords(filters);
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = exportFileName();
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            // 下载触发后释放对象 URL，避免占用内存
+            setTimeout(() => URL.revokeObjectURL(url), 0);
+
+            setRecordsMessage("导出成功，已开始下载", "success");
+        } catch (error) {
+            console.error("[records] 导出失败", error);
+            setRecordsMessage(`导出失败：${describeError(error, "请稍后重试")}`, "error");
+        } finally {
+            exporting = false;
+            if (button) {
+                button.disabled = false;
+                button.textContent = originalText || "导出 Excel";
+            }
+        }
+    }
+
     /** 初始化筛选按钮、“查看更多”，并拉取第一页 */
     function initRecordList() {
         const apply = document.getElementById("filter-apply");
         const more = document.getElementById("load-more");
+        const exportButton = document.getElementById("export-excel");
+
+        if (exportButton) {
+            exportButton.addEventListener("click", () => handleExport(exportButton));
+        }
 
         if (apply) {
             apply.addEventListener("click", () => {
@@ -498,5 +559,6 @@
         loadRecords,
         renderRecords,
         handleDelete,
+        handleExport,
     };
 })();

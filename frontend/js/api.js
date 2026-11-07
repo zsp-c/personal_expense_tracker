@@ -9,8 +9,12 @@ const REQUEST_TIMEOUT = 9000;
  * 发送请求并统一处理错误。
  * 后端错误格式为 {"detail": "..."}。
  * 超时 / 跨域（file:// 打开）都会转成可读提示，原始错误保留在 error 上便于排查。
+ *
+ * options.responseType：默认 "json"；传 "blob" 时返回二进制内容（导出 xlsx 用），
+ * 该字段不会透传给 fetch。
  */
 async function request(path, options = {}) {
+    const { responseType = "json", ...init } = options;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
@@ -19,7 +23,7 @@ async function request(path, options = {}) {
             headers: {
                 "Content-Type": "application/json",
             },
-            ...options,
+            ...init,
             signal: controller.signal,
         });
 
@@ -45,7 +49,7 @@ async function request(path, options = {}) {
             throw new Error(message);
         }
 
-        return response.json();
+        return responseType === "blob" ? response.blob() : response.json();
     } catch (error) {
         if (error && error.name === "AbortError") {
             const timeoutError = new Error("请求超时，请检查后端是否响应缓慢");
@@ -124,6 +128,13 @@ const api = {
 
     getCategoryTotals(params = {}) {
         return request(`/api/stats/category${buildQuery(params)}`);
+    },
+
+    /** 按筛选条件导出 xlsx，返回 Blob（文件名由后端 Content-Disposition 决定，前端自行拼同名） */
+    exportRecords(params = {}) {
+        return request(`/api/records/export${buildQuery(params)}`, {
+            responseType: "blob",
+        });
     },
 };
 

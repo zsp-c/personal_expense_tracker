@@ -7,7 +7,7 @@
 
 from datetime import date
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from models.record import RecordCreate, RecordUpdate
 from services import query_service, record_service
@@ -49,12 +49,18 @@ def get_record(record_id: int):
 @router.put("/{record_id}")
 def update_record(record_id: int, data: RecordUpdate):
     """修改记录。"""
-    record_service.update_record(record_id, data)
+    try:
+        record_service.update_record(record_id, data)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return {"message": "修改成功"}
 
 
 @router.delete("/{record_id}")
 def remove_record(record_id: int):
     """删除记录。"""
-    record_service.delete_record(record_id)
+    try:
+        record_service.delete_record(record_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     return {"message": "删除成功"}

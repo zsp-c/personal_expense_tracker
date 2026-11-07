@@ -94,14 +94,22 @@ body {
     background-attachment: fixed;
 }
 
-/* ---------- 顶部标题栏：深色渐变 + 院徽水印 ---------- */
+/* ---------- 顶部标题栏：蛋仔派对横幅 + 深色遮罩 + 院徽水印 ---------- */
 
 .topbar {
     overflow: hidden;
-    background: linear-gradient(115deg,
-        rgba(10, 43, 80, 0.9) 0%,
-        rgba(19, 74, 134, 0.87) 52%,
-        rgba(8, 86, 106, 0.85) 100%);
+    /* 顶栏只有约 64px 高，16:1 横幅按 cover 铺满后纵向会裁掉中段，
+       定位取 center 44% 保住角色头部，再用深色渐变压暗保证文字与徽标可读 */
+    background-color: var(--brand-900);
+    background-image:
+        linear-gradient(102deg,
+            rgba(6, 26, 48, 0.78) 0%,
+            rgba(9, 44, 78, 0.66) 52%,
+            rgba(6, 54, 68, 0.76) 100%),
+        url("../../img/《蛋仔派对》顶部.png");
+    background-size: auto, cover;
+    background-position: center, center 44%;
+    background-repeat: no-repeat;
     border-bottom: 1px solid rgba(255, 255, 255, 0.14);
     -webkit-backdrop-filter: blur(10px) saturate(1.05);
     backdrop-filter: blur(10px) saturate(1.05);
@@ -186,10 +194,15 @@ body {
     padding: 28px;
     color: var(--neutral-0);
     background-color: var(--brand-900);
+    /* 蛋仔派对品牌横幅做主体，压一层深色渐变保证数字可读；
+       横幅是 4.75:1 的超宽图，窄卡上会裁掉左右，定位偏左中保住中央的蛋仔角色 */
     background-image:
-        radial-gradient(520px 340px at 2% -18%, rgba(86, 156, 217, 0.55), rgba(86, 156, 217, 0) 70%),
-        radial-gradient(480px 320px at 102% 116%, rgba(63, 193, 214, 0.5), rgba(63, 193, 214, 0) 70%),
-        linear-gradient(135deg, var(--brand-900) 0%, var(--brand-700) 55%, var(--accent-700) 115%);
+        linear-gradient(112deg, rgba(5, 18, 34, 0.6) 0%, rgba(5, 24, 44, 0.4) 46%, rgba(6, 34, 60, 0.58) 100%),
+        linear-gradient(180deg, rgba(4, 16, 30, 0.5) 0%, rgba(4, 16, 30, 0.16) 34%, rgba(4, 16, 30, 0.5) 100%),
+        url("../../img/《蛋仔派对》超宽横幅.png");
+    background-size: auto, auto, cover;
+    background-position: center, center, 35% 50%;
+    background-repeat: no-repeat;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 20px 44px rgba(10, 43, 80, 0.3);
 }
@@ -203,9 +216,11 @@ body {
 }
 
 #overview .stat-card {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(5, 18, 34, 0.52);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: none;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 #overview .stat-card::before {
@@ -231,11 +246,13 @@ body {
 }
 
 #overview .stat-card--balance {
-    background: rgba(255, 255, 255, 0.17);
+    background: rgba(6, 26, 48, 0.62);
     border-color: rgba(127, 212, 226, 0.5);
     box-shadow: 0 12px 30px rgba(4, 20, 40, 0.22),
-        inset 0 0 26px rgba(63, 193, 214, 0.14),
+        inset 0 0 26px rgba(63, 193, 214, 0.16),
         inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 #overview .stat-card--balance .stat-card__label {
@@ -354,10 +371,17 @@ body {
     overflow: hidden;
     color: rgba(255, 255, 255, 0.75);
     background-color: rgba(10, 43, 80, 0.7);
-    background-image: linear-gradient(135deg,
-        rgba(10, 43, 80, 0.72) 0%,
-        rgba(19, 74, 134, 0.7) 62%,
-        rgba(8, 86, 106, 0.7) 118%);
+    /* 蛋仔派对底部横幅铺底，13.2:1 的超宽图居中铺满，
+       压一层深色渐变保证三行文字可读 */
+    background-image:
+        linear-gradient(105deg,
+            rgba(5, 18, 34, 0.74) 0%,
+            rgba(6, 32, 58, 0.64) 60%,
+            rgba(5, 44, 60, 0.72) 100%),
+        url("../../img/《蛋仔派对》底部.png");
+    background-size: auto, cover;
+    background-position: center, center;
+    background-repeat: no-repeat;
     -webkit-backdrop-filter: blur(7px);
     backdrop-filter: blur(7px);
     border-top: 1px solid rgba(63, 193, 214, 0.4);

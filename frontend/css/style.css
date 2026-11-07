@@ -1,216 +1,1184 @@
-/* 个人记账本基础样式 —— 模块负责人：成员 F，成员 G/H/I 按需扩展 */
+/* ============================================================
+   个人记账本 · 全局基础样式
+   负责人：成员 F（页面整体结构与导航）
+   说明：
+   1. 本文件是设计变量（CSS 自定义属性）的唯一来源，index.html 内联样式只使用不再重复定义。
+   2. 只保留当前页面实际使用的规则：基础重置、筛选栏、类别汇总容器、状态提示、布局骨架。
+   3. 旧版骨架（app-header / nav-tab / panel / records-table / btn / input / tag 等）已清理。
+   ============================================================ */
 
 :root {
-    --color-bg: #f5f6f8;
-    --color-surface: #ffffff;
-    --color-border: #e2e5ea;
-    --color-text: #1f2933;
-    --color-muted: #6b7280;
-    --color-primary: #2563eb;
-    --color-income: #16a34a;
-    --color-expense: #dc2626;
-    --radius: 10px;
-    --shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+  /* 字体与圆角、阴影 */
+  --font: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 10px 28px rgba(20, 58, 106, 0.09);
+  --shadow-sm: 0 4px 14px rgba(20, 58, 106, 0.07);
+  --shadow-xs: 0 1px 3px rgba(20, 58, 106, 0.06);
+
+  /* 学院蓝 50–900（主色系） */
+  --brand-50: #eff6fe;
+  --brand-100: #dcebfb;
+  --brand-200: #b9d6f5;
+  --brand-300: #8bbbe9;
+  --brand-400: #569cd9;
+  --brand-500: #2f7bc4;
+  --brand-600: #1a5fa8;
+  --brand-700: #134a86;
+  --brand-800: #0e3a6b;
+  --brand-900: #0a2b50;
+
+  /* 青蓝辅助色 */
+  --accent-50: #e8f8fb;
+  --accent-100: #d1f1f6;
+  --accent-300: #7fd4e2;
+  --accent-400: #3fc1d6;
+  --accent-500: #118aa0;
+  --accent-600: #0c6f83;
+  --accent-700: #08586a;
+
+  /* 功能色：成功 / 警示 / 错误 */
+  --success-50: #e4f7ef;
+  --success-500: #0e8a63;
+  --success-600: #0a7052;
+  --warning-50: #fdf1e3;
+  --warning-500: #e08a2e;
+  --warning-600: #c0741f;
+  --danger-50: #fbe8ea;
+  --danger-500: #be3a4a;
+  --danger-600: #9f2d3b;
+
+  /* 中性色 0–900 */
+  --neutral-0: #ffffff;
+  --neutral-50: #f8fafd;
+  --neutral-100: #eef2f8;
+  --neutral-200: #e0e7f1;
+  --neutral-300: #ccd8e6;
+  --neutral-400: #a2b3c7;
+  --neutral-500: #75879c;
+  --neutral-600: #5a6c80;
+  --neutral-700: #405264;
+  --neutral-800: #2a3b4d;
+  --neutral-900: #17263a;
+
+  /* 三个功能模块的强调色 */
+  --module-record: var(--warning-500);
+  --module-list: var(--brand-500);
+  --module-stats: var(--accent-500);
+
+  /* 语义映射：页面其余样式只引用这一层变量 */
+  --color-bg: var(--neutral-100);
+  --color-surface: var(--neutral-0);
+  --color-border: var(--neutral-200);
+  --color-text: var(--neutral-900);
+  --color-muted: var(--neutral-600);
+  --color-primary: var(--brand-600);
+  --color-primary-strong: var(--brand-900);
+  --color-primary-soft: var(--brand-50);
+  --color-accent: var(--accent-500);
+  --color-income: var(--success-500);
+  --color-expense: var(--danger-500);
+
+  /* 字号层级 */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 15px;
+  --text-lg: 19px;
+  --text-xl: 22px;
+  --text-2xl: 32px;
 }
 
+/* ---------- 基础重置 ---------- */
+
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-    margin: 0;
-    font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
-    background: var(--color-bg);
-    color: var(--color-text);
-    line-height: 1.5;
+  margin: 0;
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-text);
 }
 
-.topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 16px 24px;
-    background: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
+h1,
+h2,
+h3,
+p {
+  margin: 0;
 }
 
-.topbar__title {
-    margin: 0;
-    font-size: 20px;
-}
-
-.topbar__nav {
-    display: flex;
-    gap: 16px;
-}
-
-.topbar__nav a {
-    color: var(--color-muted);
-    text-decoration: none;
-}
-
-.topbar__nav a.is-active,
-.topbar__nav a:hover {
-    color: var(--color-primary);
-}
+/* ---------- 页面骨架：卡片之间保留间距 ---------- */
 
 .layout {
-    display: grid;
-    gap: 20px;
-    max-width: 960px;
-    margin: 24px auto;
-    padding: 0 16px;
+  display: grid;
+  gap: 24px;
 }
 
-.card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 20px;
-}
-
-.card__title {
-    margin: 0 0 16px;
-    font-size: 17px;
-}
-
-.card__subtitle {
-    margin: 20px 0 12px;
-    font-size: 15px;
-    color: var(--color-muted);
-}
-
-.overview__cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-}
-
-.stat-card {
-    padding: 16px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: #fafbfc;
-}
-
-.stat-card__label {
-    margin: 0 0 6px;
-    font-size: 13px;
-    color: var(--color-muted);
-}
-
-.stat-card__value {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 600;
-}
-
-.stat-card--income .stat-card__value { color: var(--color-income); }
-.stat-card--expense .stat-card__value { color: var(--color-expense); }
-
-.form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px 16px;
-    align-items: end;
-}
-
-.form__field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.form__field label {
-    font-size: 13px;
-    color: var(--color-muted);
-}
-
-.form input,
-.form select,
-.filters input,
-.filters select {
-    padding: 8px 10px;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    font: inherit;
-    background: #fff;
-}
-
-.form__message {
-    grid-column: 1 / -1;
-    min-height: 1.2em;
-    margin: 0;
-    font-size: 13px;
-    color: var(--color-expense);
-}
-
-.button {
-    padding: 9px 16px;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    background: #fff;
-    font: inherit;
-    cursor: pointer;
-}
-
-.button:hover {
-    border-color: var(--color-primary);
-}
-
-.button--primary {
-    border-color: var(--color-primary);
-    background: var(--color-primary);
-    color: #fff;
-}
+/* ---------- 筛选栏 ---------- */
 
 .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 14px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: #f8faf9;
 }
 
-.records {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-}
-
-.records th,
-.records td {
-    padding: 10px 8px;
-    border-bottom: 1px solid var(--color-border);
-    text-align: left;
-}
-
-.records th {
-    color: var(--color-muted);
-    font-weight: 500;
-}
-
-.records .amount--income { color: var(--color-income); }
-.records .amount--expense { color: var(--color-expense); }
+/* ---------- 类别汇总容器（条目样式由 statistics.js 注入） ---------- */
 
 .category-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.category-list li {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
+/* 收支概览三张统计卡：窄屏单列，宽屏由内联样式细分为 1:1:1.22 */
+.overview__cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
 }
 
-.chart {
-    height: 320px;
-    margin-top: 16px;
+/* ---------- 记录表格内的删除按钮更紧凑 ---------- */
+
+.records .button {
+  padding: 6px 14px;
+  font-size: 13px;
 }
+
+/* ---------- 状态提示 ---------- */
+
+.form__message.is-ok {
+  color: var(--color-income);
+}
+
+/* 初始化或接口整体失败时的页面级提示 */
+.global-error {
+  padding: 14px 20px;
+  border: 1px solid rgba(190, 58, 74, 0.35);
+  border-radius: 12px;
+  background: var(--danger-50);
+  color: var(--danger-600);
+  font-size: 14px;
+}
+
+.global-error[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+
+/* ============================================================
+   组件样式（原 index.html 内联样式，迁出后两页共用）
+   ============================================================ */
+
+
+/* ===== 页面外壳补充样式（原 shell.css） ===== */
+        /* ============================================================
+           页面外壳补充样式 —— 模块负责人：成员 F
+           仅用于顶部徽标、导航和页脚，不改动队友的基础样式与 DOM 结构。
+           基础样式见 style.css，本文件在它之后加载。
+           ============================================================ */
+        
+        /* ---------- 顶部标题栏 ---------- */
+        
+        .topbar {
+            flex-wrap: wrap;
+            row-gap: 12px;
+        }
+        
+        .shell-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        
+        .shell-brand__logo {
+            display: block;
+            flex: none;
+            width: auto;
+            height: 40px;
+            object-fit: contain;
+        }
+        
+        .shell-brand .topbar__title {
+            padding-left: 12px;
+            border-left: 1px solid var(--color-border);
+            line-height: 1.3;
+        }
+        
+        .topbar__nav a {
+            display: inline-block;
+            padding: 4px 0;
+            font-size: 15px;
+        }
+        
+        .topbar__nav a.is-active {
+            font-weight: 600;
+        }
+        
+        /* ---------- 页脚 ---------- */
+        
+        .shell-footer {
+            max-width: 960px;
+            margin: 8px auto 24px;
+            padding: 0 16px;
+            color: var(--color-muted);
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .shell-footer__text {
+            margin: 0;
+            color: #9aa3af;
+            letter-spacing: 0.3px;
+        }
+        
+        /* ---------- 窄屏适配 ---------- */
+        
+        @media (max-width: 640px) {
+            .topbar {
+                padding: 12px 16px;
+            }
+        
+            .shell-brand {
+                gap: 8px;
+            }
+        
+            .shell-brand__logo {
+                height: 32px;
+            }
+        
+            .shell-brand .topbar__title {
+                padding-left: 8px;
+                font-size: 18px;
+            }
+        
+            .topbar__nav {
+                gap: 14px;
+                font-size: 14px;
+            }
+        }
+
+        /* ===== 校园主题视觉层（原 theme.css） ===== */
+        /* ============================================================
+           校园主题视觉层 —— 模块负责人：成员 F
+           在 style.css、shell.css 之后加载，通过覆盖变量与类完成美化。
+           不修改 DOM 结构、id、class 名，也不影响队友 JS 的渲染逻辑。
+           主色调：学院蓝 #1a5fa8 + 青蓝 #118aa0
+           ============================================================ */
+        
+        /* 设计变量统一在 style.css 中定义，这里只保留页面样式 */
+
+        /* ---------- 页面底色 ---------- */
+        
+        body {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--color-text);
+            background-color: var(--color-bg);
+            background-image:
+                radial-gradient(1100px 420px at 50% -140px, rgba(26, 95, 168, 0.16), rgba(26, 95, 168, 0) 70%),
+                linear-gradient(180deg, #edf3fa 0%, #e6ecf6 100%);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* 锚点跳转时给吸顶导航留出空间 */
+        #overview,
+        #record-form,
+        #record-list,
+        #statistics {
+            scroll-margin-top: 92px;
+        }
+        
+        /* ---------- 顶部标题栏：深蓝渐变 ---------- */
+        
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 14px 32px;
+            background: linear-gradient(115deg, #0d2f55 0%, #17497f 48%, #1a5fa8 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 26px rgba(13, 47, 85, 0.22);
+        }
+        
+        .shell-brand {
+            gap: 10px;
+        }
+        
+        .shell-brand__logo {
+            height: 42px;
+            padding: 4px 6px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+        }
+        
+        .shell-brand .topbar__title {
+            padding-left: 16px;
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+            border-left-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .topbar__nav {
+            gap: 4px;
+        }
+        
+        .topbar__nav a {
+            padding: 7px 16px;
+            border-radius: 999px;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+        }
+        
+        .topbar__nav a:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.14);
+        }
+        
+        .topbar__nav a.is-active,
+        .topbar__nav a.is-active:hover {
+            color: var(--color-primary-strong);
+            background: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+        }
+        
+        /* ---------- 内容区与卡片 ---------- */
+        
+        .layout {
+            max-width: 1120px;
+            gap: 24px;
+            margin: 32px auto 0;
+            padding: 0 24px;
+        }
+        
+        .card {
+            padding: 26px 28px;
+            border: 1px solid #e3ebf6;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .card__title {
+            position: relative;
+            padding-left: 14px;
+            margin-bottom: 20px;
+            color: #143355;
+            font-size: 19px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
+        
+        .card__title::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 4px;
+            height: 18px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
+            transform: translateY(-50%);
+        }
+        
+        .card__subtitle {
+            margin: 26px 0 12px;
+            color: #3d5a7a;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        
+        /* ---------- 收支概览数字卡片 ---------- */
+        
+        .overview__cards {
+            gap: 16px;
+        }
+        
+        .stat-card {
+            position: relative;
+            padding: 18px 20px 18px 24px;
+            background: linear-gradient(180deg, #ffffff 0%, #f2f7fe 100%);
+            border: 1px solid #e2ebf7;
+            border-radius: 14px;
+            box-shadow: var(--shadow-xs);
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--color-primary);
+        }
+        
+        .stat-card--income::before {
+            background: var(--color-income);
+        }
+        
+        .stat-card--expense::before {
+            background: var(--color-expense);
+        }
+        
+        .stat-card__label {
+            margin-bottom: 8px;
+            color: #6b8299;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.8px;
+        }
+        
+        .stat-card__value {
+            color: #143355;
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.3;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .stat-card--balance .stat-card__value {
+            color: var(--color-primary);
+        }
+        
+        /* ---------- 表单控件 ---------- */
+        
+        .form__field label {
+            color: #4f6782;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .form input,
+        .form select,
+        .filters input,
+        .filters select {
+            min-height: 42px;
+            padding: 9px 12px;
+            color: var(--color-text);
+            background: #fbfdff;
+            border: 1px solid #d5e1ef;
+            border-radius: var(--radius-sm);
+            transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+        }
+        
+        .form input:hover,
+        .form select:hover,
+        .filters input:hover,
+        .filters select:hover {
+            border-color: #b9cde3;
+        }
+        
+        .form input:focus,
+        .form select:focus,
+        .filters input:focus,
+        .filters select:focus {
+            outline: none;
+            background: #ffffff;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(26, 95, 168, 0.16);
+        }
+        
+        .form__message {
+            color: var(--color-expense);
+            font-size: 13px;
+        }
+        
+        /* ---------- 按钮 ---------- */
+        
+        .button {
+            padding: 10px 18px;
+            color: #1f4671;
+            background: #ffffff;
+            border: 1px solid #cfdcea;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease,
+                box-shadow 0.18s ease, transform 0.12s ease;
+        }
+        
+        .button:hover {
+            color: var(--color-primary);
+            background: #f4f9ff;
+            border-color: var(--color-primary);
+            box-shadow: var(--shadow-xs);
+        }
+        
+        .button:active {
+            transform: translateY(1px);
+        }
+        
+        .button:focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+        
+        .button--primary {
+            color: #ffffff;
+            background: linear-gradient(135deg, #1a5fa8 0%, #0f7f9c 100%);
+            border-color: transparent;
+            box-shadow: 0 6px 16px rgba(26, 95, 168, 0.28);
+        }
+        
+        .button--primary:hover {
+            color: #ffffff;
+            background: linear-gradient(135deg, #174f8c 0%, #0b7189 100%);
+            border-color: transparent;
+            box-shadow: 0 8px 22px rgba(26, 95, 168, 0.34);
+            transform: translateY(-1px);
+        }
+        
+        .button--primary:active {
+            transform: translateY(0);
+        }
+        
+        /* ---------- 筛选栏 ---------- */
+        
+        .filters {
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .filters input,
+        .filters select {
+            flex: 0 1 auto;
+            width: auto;
+            min-width: 120px;
+        }
+        
+        /* ---------- 账单表格 ---------- */
+        
+        .records {
+            font-size: 14px;
+        }
+        
+        .records th,
+        .records td {
+            padding: 12px 10px;
+        }
+        
+        .records thead th {
+            color: #1b4574;
+            background: var(--color-primary-soft);
+            border-bottom: 1px solid #d3e2f4;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        
+        .records tbody td {
+            color: #334a64;
+            border-bottom: 1px solid #edf2f9;
+        }
+        
+        .records tbody tr:nth-child(even) {
+            background: #f7fbff;
+        }
+        
+        .records tbody tr:hover {
+            background: #eaf3ff;
+        }
+        
+        .records tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .records tbody td[colspan] {
+            padding: 30px 10px;
+            color: var(--color-muted);
+            text-align: center;
+        }
+        
+        .records .amount--income {
+            color: var(--color-income);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .records .amount--expense {
+            color: var(--color-expense);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        /* ---------- 类别汇总 ---------- */
+        
+        .category-list {
+            gap: 10px;
+        }
+        
+        .category-list li {
+            padding: 11px 14px;
+            background: linear-gradient(90deg, #f7faff 0%, #fdfeff 100%);
+            border: 1px solid #e2ebf7;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+        }
+        
+        .category-list li:hover {
+            background: #f2f8ff;
+            border-color: #bcd2e8;
+            box-shadow: var(--shadow-xs);
+        }
+        
+        .category-list li span + span {
+            color: #154a7d;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        /* ---------- 图表容器（含空态） ---------- */
+        
+        .chart {
+            position: relative;
+            height: 340px;
+            margin-top: 20px;
+            border: 1px dashed #c4d7ea;
+            border-radius: 14px;
+            background-color: #f7fbff;
+            background-image:
+                repeating-linear-gradient(0deg, rgba(26, 95, 168, 0.05) 0 1px, transparent 1px 44px),
+                repeating-linear-gradient(90deg, rgba(26, 95, 168, 0.05) 0 1px, transparent 1px 72px);
+            overflow: hidden;
+        }
+        
+        .chart:empty::before {
+            content: "暂无图表数据，添加记录后展示趋势";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7d93ac;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+        }
+        
+        /* ---------- 页脚版权 ---------- */
+        
+        .shell-footer {
+            max-width: 1120px;
+            margin: 40px auto 36px;
+            padding: 20px 24px 0;
+            border-top: 1px solid #d8e2f0;
+            text-align: center;
+        }
+        
+        .shell-footer__text {
+            margin: 0;
+            color: #8295ab;
+            font-size: 12px;
+            line-height: 2;
+            letter-spacing: 0.4px;
+        }
+        
+        /* ---------- 清晰度与降级保护 ---------- */
+        
+        @media (prefers-reduced-motion: reduce) {
+            .button,
+            .topbar__nav a,
+            .category-list li,
+            .form input,
+            .form select,
+            .filters input,
+            .filters select {
+                transition: none;
+            }
+        }
+        
+        /* ---------- 桌面宽屏 / 窄屏 ---------- */
+        
+        @media (max-width: 1024px) {
+            .topbar {
+                padding: 12px 20px;
+            }
+        
+            .layout {
+                padding: 0 20px;
+                margin-top: 24px;
+            }
+        
+            .card {
+                padding: 22px;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            body {
+                font-size: 14px;
+            }
+        
+            .shell-brand__logo {
+                height: 34px;
+            }
+        
+            .shell-brand .topbar__title {
+                padding-left: 10px;
+                font-size: 18px;
+            }
+        
+            .topbar__nav a {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+        
+            .layout {
+                padding: 0 16px;
+                gap: 18px;
+            }
+        
+            .card {
+                padding: 18px 16px;
+                border-radius: 12px;
+            }
+        
+            .card__title {
+                font-size: 17px;
+            }
+        
+            .stat-card__value {
+                font-size: 22px;
+            }
+        
+            .filters input,
+            .filters select,
+            .filters .button {
+                flex: 1 1 140px;
+                min-width: 0;
+            }
+        
+            .records {
+                font-size: 13px;
+            }
+        
+            .records th,
+            .records td {
+                padding: 10px 6px;
+            }
+        
+            .chart {
+                height: 260px;
+            }
+        
+            .shell-footer {
+                margin: 28px auto 24px;
+                padding: 16px 16px 0;
+            }
+        }
+
+        /* ===== 视觉增强层（原 visual.css） ===== */
+        /* ============================================================
+           视觉增强层 —— 模块负责人：成员 F
+           在 style.css、shell.css、theme.css 之后加载，只做颜色与图像装饰：
+           完整配色 token、页面纹理、顶栏水印、概览主视觉、模块区分、深色页脚。
+           不修改 DOM、id、class 名，不改队友 JS，也不引入任何外部资源。
+           ============================================================ */
+        
+        /* ---------- 页面底色：背景图 + 高比例浅色遮罩 + 极淡点阵纹理 ---------- */
+        
+        body {
+            background-color: var(--neutral-100);
+            background-image:
+                radial-gradient(circle, rgba(26, 95, 168, 0.06) 0 1px, rgba(26, 95, 168, 0) 1.4px),
+                linear-gradient(180deg, rgba(242, 247, 253, 0.78) 0%, rgba(234, 241, 250, 0.76) 100%),
+                url("../img/背景.png");
+            background-size: 24px 24px, auto, cover;
+            background-position: center, center, center;
+            background-repeat: repeat, no-repeat, no-repeat;
+            background-attachment: fixed;
+        }
+        
+        /* ---------- 顶部标题栏：蛋仔派对横幅 + 深色遮罩 + 院徽水印 ---------- */
+        
+        .topbar {
+            overflow: hidden;
+            /* 顶栏只有约 64px 高，16:1 横幅按 cover 铺满后纵向会裁掉中段，
+               定位取 center 44% 保住角色头部，再用深色渐变压暗保证文字与徽标可读 */
+            background-color: var(--brand-900);
+            background-image:
+                linear-gradient(102deg,
+                    rgba(6, 26, 48, 0.78) 0%,
+                    rgba(9, 44, 78, 0.66) 52%,
+                    rgba(6, 54, 68, 0.76) 100%),
+                url("../img/《蛋仔派对》顶部.png");
+            background-size: auto, cover;
+            background-position: center, center 44%;
+            background-repeat: no-repeat;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+            -webkit-backdrop-filter: blur(10px) saturate(1.05);
+            backdrop-filter: blur(10px) saturate(1.05);
+        }
+        
+        .topbar::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: url("../img/院徽.png");
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: 64px auto;
+            opacity: 0.08;
+            pointer-events: none;
+        }
+        
+        .topbar > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .topbar__nav a.is-active,
+        .topbar__nav a.is-active:hover {
+            color: var(--brand-800);
+            background: linear-gradient(180deg, var(--neutral-0) 0%, var(--brand-100) 100%);
+        }
+        
+        /* ---------- 卡片基础：统一圆角阴影，模块顶部色条与角落光晕 ---------- */
+        
+        .card {
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.88);
+            background-repeat: no-repeat;
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 26px rgba(20, 58, 106, 0.08);
+        }
+        
+        /* 记录：暖橙 */
+        #record-form {
+            background-image:
+                radial-gradient(240px 200px at 100% 0, rgba(224, 138, 46, 0.14), rgba(224, 138, 46, 0) 72%),
+                linear-gradient(90deg, var(--module-record) 0%, rgba(224, 138, 46, 0.35) 45%, rgba(224, 138, 46, 0) 100%);
+            background-size: auto, 100% 3px;
+            background-position: center, top left;
+        }
+        
+        #record-form .card__title::before {
+            background: linear-gradient(180deg, var(--module-record), var(--warning-600));
+        }
+        
+        /* 查看：蓝 */
+        #record-list {
+            background-image:
+                radial-gradient(240px 200px at 100% 0, rgba(47, 123, 196, 0.14), rgba(47, 123, 196, 0) 72%),
+                linear-gradient(90deg, var(--module-list) 0%, rgba(47, 123, 196, 0.35) 45%, rgba(47, 123, 196, 0) 100%);
+            background-size: auto, 100% 3px;
+            background-position: center, top left;
+        }
+        
+        #record-list .card__title::before {
+            background: linear-gradient(180deg, var(--module-list), var(--brand-700));
+        }
+        
+        /* 统计：青 */
+        #statistics {
+            background-image:
+                radial-gradient(240px 200px at 100% 0, rgba(17, 138, 160, 0.14), rgba(17, 138, 160, 0) 72%),
+                linear-gradient(90deg, var(--module-stats) 0%, rgba(17, 138, 160, 0.35) 45%, rgba(17, 138, 160, 0) 100%);
+            background-size: auto, 100% 3px;
+            background-position: center, top left;
+        }
+        
+        #statistics .card__title::before {
+            background: linear-gradient(180deg, var(--module-stats), var(--accent-700));
+        }
+        
+        /* ---------- 概览区：主视觉深色卡 ---------- */
+        
+        #overview {
+            padding: 28px;
+            color: var(--neutral-0);
+            background-color: var(--brand-900);
+            /* 蛋仔派对品牌横幅做主体，压一层深色渐变保证数字可读；
+               横幅是 4.75:1 的超宽图，窄卡上会裁掉左右，定位偏左中保住中央的蛋仔角色 */
+            background-image:
+                linear-gradient(112deg, rgba(5, 18, 34, 0.6) 0%, rgba(5, 24, 44, 0.4) 46%, rgba(6, 34, 60, 0.58) 100%),
+                linear-gradient(180deg, rgba(4, 16, 30, 0.5) 0%, rgba(4, 16, 30, 0.16) 34%, rgba(4, 16, 30, 0.5) 100%),
+                url("../img/《蛋仔派对》超宽横幅.png");
+            background-size: auto, auto, cover;
+            background-position: center, center, 35% 50%;
+            background-repeat: no-repeat;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 44px rgba(10, 43, 80, 0.3);
+        }
+        
+        #overview .card__title {
+            color: var(--neutral-0);
+        }
+        
+        #overview .card__title::before {
+            background: linear-gradient(180deg, var(--accent-300), var(--accent-500));
+        }
+        
+        #overview .stat-card {
+            background: rgba(5, 18, 34, 0.52);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: none;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        
+        #overview .stat-card::before {
+            display: none;
+        }
+        
+        #overview .stat-card__label {
+            color: rgba(255, 255, 255, 0.72);
+        }
+        
+        #overview .stat-card__value {
+            color: var(--neutral-0);
+            font-size: var(--text-2xl);
+            text-shadow: 0 2px 12px rgba(4, 20, 40, 0.28);
+        }
+        
+        #overview .stat-card--income .stat-card__value {
+            color: #8ff0c6;
+        }
+        
+        #overview .stat-card--expense .stat-card__value {
+            color: #ffb3bb;
+        }
+        
+        #overview .stat-card--balance {
+            background: rgba(6, 26, 48, 0.62);
+            border-color: rgba(127, 212, 226, 0.5);
+            box-shadow: 0 12px 30px rgba(4, 20, 40, 0.22),
+                inset 0 0 26px rgba(63, 193, 214, 0.16),
+                inset 0 1px 0 rgba(255, 255, 255, 0.24);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        
+        #overview .stat-card--balance .stat-card__label {
+            color: rgba(255, 255, 255, 0.85);
+        }
+        
+        #overview .stat-card--balance .stat-card__value {
+            color: var(--neutral-0);
+            font-size: 36px;
+            letter-spacing: 0.4px;
+        }
+        
+        /* 余额卡略宽，形成主次层次 */
+        @media (min-width: 901px) {
+            #overview .overview__cards {
+                grid-template-columns: 1fr 1fr 1.22fr;
+            }
+        }
+        
+        /* ---------- 按钮与表单：同色系渐变 ---------- */
+        
+        .button--primary {
+            background: linear-gradient(135deg, var(--brand-600) 0%, var(--accent-600) 100%);
+            box-shadow: 0 6px 18px rgba(26, 95, 168, 0.3);
+        }
+        
+        .button--primary:hover {
+            background: linear-gradient(135deg, var(--brand-700) 0%, var(--accent-700) 100%);
+            box-shadow: 0 8px 22px rgba(26, 95, 168, 0.36);
+        }
+        
+        .form input:focus,
+        .form select:focus,
+        .filters input:focus,
+        .filters select:focus {
+            border-color: var(--brand-500);
+            box-shadow: 0 0 0 3px rgba(47, 123, 196, 0.18);
+        }
+        
+        /* ---------- 需要精确阅读的区域：不透明度高于卡片 ---------- */
+        
+        .form input,
+        .form select,
+        .filters input,
+        .filters select {
+            background-color: rgba(255, 255, 255, 0.97);
+        }
+        
+        .records tbody tr {
+            background-color: rgba(255, 255, 255, 0.96);
+        }
+        
+        /* ---------- 账单表格：同色系表头渐变 ---------- */
+        
+        .records thead th {
+            background: linear-gradient(180deg, var(--brand-50) 0%, #d8e8f8 100%);
+            color: var(--brand-800);
+            border-bottom-color: var(--brand-200);
+        }
+        
+        .records tbody tr:nth-child(even) {
+            background: var(--neutral-50);
+        }
+        
+        .records tbody tr:hover {
+            background: var(--brand-50);
+        }
+        
+        /* ---------- 类别汇总 ---------- */
+        
+        .category-list li {
+            background: linear-gradient(90deg, var(--neutral-50) 0%, var(--neutral-0) 100%);
+            border-color: var(--neutral-200);
+        }
+        
+        .category-list li:hover {
+            background: linear-gradient(90deg, var(--brand-50) 0%, var(--neutral-0) 100%);
+            border-color: var(--brand-300);
+        }
+        
+        /* ---------- 图表容器：分区渐变空状态（不隐藏、不锁死子节点） ---------- */
+        
+        .chart {
+            overflow: visible;
+            border: 1px solid var(--brand-200);
+            background-color: #f2f8fe;
+            background-image:
+                radial-gradient(460px 220px at 12% 8%, rgba(47, 123, 196, 0.22), rgba(47, 123, 196, 0) 72%),
+                radial-gradient(460px 220px at 90% 94%, rgba(17, 138, 160, 0.2), rgba(17, 138, 160, 0) 72%),
+                repeating-linear-gradient(0deg, rgba(26, 95, 168, 0.055) 0 1px, rgba(26, 95, 168, 0) 1px 44px),
+                repeating-linear-gradient(90deg, rgba(26, 95, 168, 0.055) 0 1px, rgba(26, 95, 168, 0) 1px 72px);
+        }
+        
+        .chart:empty::before {
+            content: "暂无图表数据\A 添加记录后自动生成趋势图";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neutral-600);
+            font-size: var(--text-sm);
+            line-height: 1.9;
+            letter-spacing: 0.6px;
+            white-space: pre;
+            text-align: center;
+        }
+        
+        /* ---------- 页脚：深色区块，与顶栏呼应 ---------- */
+        
+        .shell-footer {
+            position: relative;
+            max-width: none;
+            margin: 48px 0 0;
+            padding: 26px 24px 30px;
+            overflow: hidden;
+            color: rgba(255, 255, 255, 0.75);
+            background-color: rgba(10, 43, 80, 0.7);
+            /* 蛋仔派对底部横幅铺底，13.2:1 的超宽图居中铺满，
+               压一层深色渐变保证三行文字可读 */
+            background-image:
+                linear-gradient(105deg,
+                    rgba(5, 18, 34, 0.74) 0%,
+                    rgba(6, 32, 58, 0.64) 60%,
+                    rgba(5, 44, 60, 0.72) 100%),
+                url("../img/《蛋仔派对》底部.png");
+            background-size: auto, cover;
+            background-position: center, center;
+            background-repeat: no-repeat;
+            -webkit-backdrop-filter: blur(7px);
+            backdrop-filter: blur(7px);
+            border-top: 1px solid rgba(63, 193, 214, 0.4);
+            text-align: center;
+        }
+        
+        .shell-footer::before {
+            content: "";
+            position: absolute;
+            right: 6%;
+            top: 50%;
+            width: 120px;
+            height: 120px;
+            background: url("../img/校徽.png") center / contain no-repeat;
+            opacity: 0.07;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+        
+        .shell-footer::after {
+            content: "福州大学 · 计算机与大数据学院";
+            display: block;
+            margin-top: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            text-shadow: 0 1px 3px rgba(4, 20, 40, 0.5);
+        }
+        
+        .shell-footer > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .shell-footer__text {
+            color: rgba(255, 255, 255, 0.78);
+            font-size: var(--text-xs);
+            text-shadow: 0 1px 3px rgba(4, 20, 40, 0.5);
+        }
+        
+        /* ---------- 窄屏适配 ---------- */
+        
+        @media (max-width: 900px) {
+            .topbar::before {
+                display: none;
+            }
+        
+            #overview {
+                padding: 20px;
+            }
+        
+            #overview .stat-card--balance .stat-card__value {
+                font-size: 28px;
+            }
+        
+            .shell-footer::before {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            #overview .stat-card__value {
+                font-size: 24px;
+            }
+        
+            #overview .stat-card--balance .stat-card__value {
+                font-size: 26px;
+            }
+        
+            .shell-footer {
+                margin-top: 32px;
+                padding: 22px 16px 24px;
+            }
+        }

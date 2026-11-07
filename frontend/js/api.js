@@ -7,12 +7,17 @@ const API_BASE = "http://127.0.0.1:8000";
  * 后端错误格式为 {"detail": "..."}。
  */
 async function request(path, options = {}) {
-    const response = await fetch(`${API_BASE}${path}`, {
-        headers: {
+    const config = { ...options };
+
+    // 只在带请求体（POST/PUT）时声明 JSON，避免 GET/DELETE 触发不必要的 CORS 预检
+    if (config.body !== undefined) {
+        config.headers = {
             "Content-Type": "application/json",
-        },
-        ...options,
-    });
+            ...(config.headers || {}),
+        };
+    }
+
+    const response = await fetch(`${API_BASE}${path}`, config);
 
     if (!response.ok) {
         let message = "请求失败";

@@ -11,12 +11,30 @@
 from database.connection import get_connection
 
 
-def insert_record(data) -> int:
+def insert_record(data: dict) -> int:
     """插入一条记录，返回新记录 id。
 
-    TODO(成员 C)：实现 INSERT，字段顺序与建表语句一致。
+    data 字段：date(str, YYYY-MM-DD), type, amount, category, remark
     """
-    raise NotImplementedError("待实现：成员 C")
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            """
+            INSERT INTO records (date, type, amount, category, remark)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                data["date"],
+                data["type"],
+                data["amount"],
+                data["category"],
+                data["remark"],
+            ),
+        )
+        conn.commit()
+        return cursor.lastrowid
+    finally:
+        conn.close()
 
 
 def get_all_records(
@@ -26,32 +44,87 @@ def get_all_records(
     category: str | None = None,
     limit: int | None = None,
 ) -> list[dict]:
-    """按条件查询记录，默认按 date DESC, id DESC 排序。
+    """按条件查询记录，默认按 date DESC, id DESC 排序。"""
+    conditions: list[str] = []
+    params: list = []
 
-    TODO(成员 D)：动态拼接 WHERE 条件，全部使用参数绑定。
-    """
-    raise NotImplementedError("待实现：成员 D")
+    if start_date:
+        conditions.append("date >= ?")
+        params.append(start_date)
+    if end_date:
+        conditions.append("date <= ?")
+        params.append(end_date)
+    if type:
+        conditions.append("type = ?")
+        params.append(type)
+    if category:
+        conditions.append("category = ?")
+        params.append(category)
+
+    sql = "SELECT * FROM records"
+    if conditions:
+        sql += " WHERE " + " AND ".join(conditions)
+    sql += " ORDER BY date DESC, id DESC"
+
+    if limit is not None:
+        sql += " LIMIT ?"
+        params.append(int(limit))
+
+    conn = get_connection()
+    try:
+        rows = conn.execute(sql, params).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
 
 
 def get_record_by_id(record_id: int) -> dict | None:
-    """按 id 查询单条记录，不存在返回 None。
+    """按 id 查询单条记录，不存在返回 None。"""
+    conn = get_connection()
+    try:
+        row = conn.execute(
+            "SELECT * FROM records WHERE id = ?",
+            (record_id,),
+        ).fetchone()
+        return dict(row) if row is not None else None
+    finally:
+        conn.close()
 
-    TODO(成员 D)：实现单条查询。
-    """
-    raise NotImplementedError("待实现：成员 D")
 
-
-def update_record(record_id: int, data) -> bool:
-    """更新记录，返回是否更新成功。
-
-    TODO(成员 C)：实现 UPDATE。
-    """
-    raise NotImplementedError("待实现：成员 C")
+def update_record(record_id: int, data: dict) -> bool:
+    """更新记录，返回是否更新成功（用 rowcount 判断）。"""
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            """
+            UPDATE records
+            SET date = ?, type = ?, amount = ?, category = ?, remark = ?
+            WHERE id = ?
+            """,
+            (
+                data["date"],
+                data["type"],
+                data["amount"],
+                data["category"],
+                data["remark"],
+                record_id,
+            ),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    finally:
+        conn.close()
 
 
 def delete_record(record_id: int) -> bool:
-    """删除记录，返回是否删除成功。
-
-    TODO(成员 C)：实现 DELETE，用 cursor.rowcount > 0 判断。
-    """
-    raise NotImplementedError("待实现：成员 C")
+    """删除记录，返回是否删除成功（用 rowcount 判断）。"""
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            "DELETE FROM records WHERE id = ?",
+            (record_id,),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    finally:
+        conn.close()

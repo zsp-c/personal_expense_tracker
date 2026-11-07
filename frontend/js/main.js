@@ -4,7 +4,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // 各模块在自身文件中挂载到 window.XXXModule，按加载顺序初始化。
     if (window.RecordsModule) {
         window.RecordsModule.initRecordForm();
-        window.RecordsModule.initRecordList();
+    }
+
+    if (window.RecordsListModule) {
+        window.RecordsListModule.initRecordList();
     }
 
     if (window.StatisticsModule) {

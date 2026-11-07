@@ -632,28 +632,9 @@
         if (document.addEventListener) {
             document.addEventListener(REFRESH_EVENT, refresh);
         }
-        if (typeof window !== "undefined" && window.addEventListener) {
-            window.addEventListener(REFRESH_EVENT, refresh);
-        }
 
-        // 模块自行完成首次加载，不依赖 main.js 的初始化顺序，
-        // 保证单独打开统计区域时也有数据。
+        // 首次加载由 main.js 统一调用 initStatistics 触发，避免双启动。
         return refresh();
-    }
-
-    /* ---------------------------- 自动启动 ---------------------------- */
-
-    function autoInit() {
-        if (initialized) return;
-        initStatistics();
-    }
-
-    if (typeof document !== "undefined") {
-        if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", autoInit);
-        } else {
-            autoInit();
-        }
     }
 
     /* ---------------------------- 模块导出 ---------------------------- */

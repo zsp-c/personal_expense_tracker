@@ -1,0 +1,216 @@
+/* 个人记账本基础样式 —— 模块负责人：成员 F，成员 G/H/I 按需扩展 */
+
+:root {
+    --color-bg: #f5f6f8;
+    --color-surface: #ffffff;
+    --color-border: #e2e5ea;
+    --color-text: #1f2933;
+    --color-muted: #6b7280;
+    --color-primary: #2563eb;
+    --color-income: #16a34a;
+    --color-expense: #dc2626;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.5;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 24px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.topbar__title {
+    margin: 0;
+    font-size: 20px;
+}
+
+.topbar__nav {
+    display: flex;
+    gap: 16px;
+}
+
+.topbar__nav a {
+    color: var(--color-muted);
+    text-decoration: none;
+}
+
+.topbar__nav a.is-active,
+.topbar__nav a:hover {
+    color: var(--color-primary);
+}
+
+.layout {
+    display: grid;
+    gap: 20px;
+    max-width: 960px;
+    margin: 24px auto;
+    padding: 0 16px;
+}
+
+.card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+}
+
+.card__title {
+    margin: 0 0 16px;
+    font-size: 17px;
+}
+
+.card__subtitle {
+    margin: 20px 0 12px;
+    font-size: 15px;
+    color: var(--color-muted);
+}
+
+.overview__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.stat-card {
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: #fafbfc;
+}
+
+.stat-card__label {
+    margin: 0 0 6px;
+    font-size: 13px;
+    color: var(--color-muted);
+}
+
+.stat-card__value {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.stat-card--income .stat-card__value { color: var(--color-income); }
+.stat-card--expense .stat-card__value { color: var(--color-expense); }
+
+.form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px 16px;
+    align-items: end;
+}
+
+.form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form__field label {
+    font-size: 13px;
+    color: var(--color-muted);
+}
+
+.form input,
+.form select,
+.filters input,
+.filters select {
+    padding: 8px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font: inherit;
+    background: #fff;
+}
+
+.form__message {
+    grid-column: 1 / -1;
+    min-height: 1.2em;
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-expense);
+}
+
+.button {
+    padding: 9px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    cursor: pointer;
+}
+
+.button:hover {
+    border-color: var(--color-primary);
+}
+
+.button--primary {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.records {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.records th,
+.records td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+}
+
+.records th {
+    color: var(--color-muted);
+    font-weight: 500;
+}
+
+.records .amount--income { color: var(--color-income); }
+.records .amount--expense { color: var(--color-expense); }
+
+.category-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.category-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.chart {
+    height: 320px;
+    margin-top: 16px;
+}

@@ -2,25 +2,119 @@
 
 (function () {
     const PAGE_SIZE = 10;
+    const CATEGORIES = {
+        expense: ["饮食", "交通", "房租", "购物", "娱乐"],
+        income: ["工资", "奖金", "兼职", "红包"],
+    };
 
     let currentOffset = 0;
 
-    /** 初始化新增记账表单。TODO(成员 G) */
+    /** 初始化新增记账表单。 */
     function initRecordForm() {
         const form = document.getElementById("record-form-element");
         if (!form) return;
 
-        // TODO(成员 G)：
-        // 1. 默认日期设为今天。
-        // 2. 拦截 submit，读取字段。
-        // 3. amount 使用 yuanToFen 转成分。
-        // 4. 调用 api.createRecord。
-        // 5. 成功后清空表单、刷新列表和统计。
-        // 6. 失败时在 #form-message 展示错误。
+        const typeField = form.elements.namedItem("type");
+        let categoryField = form.elements.namedItem("category");
+        const dateField = form.elements.namedItem("date");
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        if (categoryField.tagName !== "SELECT") {
+            const categorySelect = document.createElement("select");
+            categorySelect.id = categoryField.id;
+            categorySelect.name = categoryField.name;
+            categorySelect.required = categoryField.required;
+            categoryField.replaceWith(categorySelect);
+            categoryField = categorySelect;
+        }
+
+        dateField.value = getLocalDateString();
+        renderCategories(typeField.value, categoryField);
+        typeField.addEventListener("change", () => {
+            renderCategories(typeField.value, categoryField);
+        });
+
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
-            setFormMessage("待实现：成员 G");
+
+            const amountText = form.elements.namedItem("amount").value.trim();
+            if (!/^\d+(?:\.\d{1,2})?$/.test(amountText)) {
+                setFormMessage("金额格式错误，请输入最多两位小数的正数。");
+                return;
+            }
+
+            const amount = yuanToFen(amountText);
+            if (!Number.isSafeInteger(amount) || amount <= 0) {
+                setFormMessage("金额必须大于 0，且不能超出可支持范围。");
+                return;
+            }
+
+            const data = {
+                date: dateField.value,
+                type: typeField.value,
+                category: categoryField.value,
+                amount,
+                remark: form.elements.namedItem("remark").value.trim(),
+            };
+
+            if (!data.date || !data.category) {
+                setFormMessage("请填写日期并选择类别。");
+                return;
+            }
+
+            if (submitButton) submitButton.disabled = true;
+            setFormMessage("正在保存...");
+            try {
+                await api.createRecord(data);
+                form.reset();
+                dateField.value = getLocalDateString();
+                renderCategories(typeField.value, categoryField);
+                setFormMessage("添加成功。");
+
+                const refreshResults = await Promise.allSettled([
+                    refreshModule("RecordsModule", "loadRecords"),
+                    refreshModule("StatisticsModule", "loadSummary"),
+                    refreshModule("StatisticsModule", "loadCategoryStats"),
+                ]);
+                if (refreshResults.some((result) => result.status === "rejected")) {
+                    setFormMessage("添加成功，但列表或统计刷新失败，请稍后重试。");
+                }
+            } catch (error) {
+                setFormMessage(`添加失败：${error.message || "请求异常，请稍后重试。"}`);
+            } finally {
+                if (submitButton) submitButton.disabled = false;
+            }
         });
+    }
+
+    function getLocalDateString() {
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        const day = String(today.getDate()).padStart(2, "0");
+        return `${today.getFullYear()}-${month}-${day}`;
+    }
+
+    function renderCategories(type, select) {
+        select.textContent = "";
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "请选择类别";
+        select.appendChild(placeholder);
+
+        CATEGORIES[type].forEach((category) => {
+            const option = document.createElement("option");
+            option.value = category;
+            option.textContent = category;
+            select.appendChild(option);
+        });
+    }
+
+    function refreshModule(moduleName, methodName) {
+        const module = window[moduleName];
+        if (!module || typeof module[methodName] !== "function") {
+            return Promise.resolve();
+        }
+        return Promise.resolve().then(() => module[methodName]());
     }
 
     /** 加载账单列表。TODO(成员 H) */

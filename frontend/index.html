@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人记账本</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 顶部导航：模块负责人 成员 F -->
+    <header class="topbar">
+        <h1 class="topbar__title">个人记账本</h1>
+        <nav class="topbar__nav">
+            <a href="#overview" class="is-active">首页</a>
+            <a href="#record-form">记账</a>
+            <a href="#record-list">账单</a>
+            <a href="#statistics">统计</a>
+        </nav>
+    </header>
+
+    <main class="layout">
+        <!-- 收支概览：成员 I -->
+        <section id="overview" class="card overview">
+            <h2 class="card__title">收支概览</h2>
+            <div class="overview__cards">
+                <article class="stat-card stat-card--income">
+                    <p class="stat-card__label">总收入</p>
+                    <p class="stat-card__value" id="total-income">--</p>
+                </article>
+                <article class="stat-card stat-card--expense">
+                    <p class="stat-card__label">总支出</p>
+                    <p class="stat-card__value" id="total-expense">--</p>
+                </article>
+                <article class="stat-card stat-card--balance">
+                    <p class="stat-card__label">当前结余</p>
+                    <p class="stat-card__value" id="total-balance">--</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- 新增记账表单：成员 G -->
+        <section id="record-form" class="card">
+            <h2 class="card__title">新增记账</h2>
+            <form id="record-form-element" class="form">
+                <div class="form__field">
+                    <label for="type">类型</label>
+                    <select id="type" name="type" required>
+                        <option value="expense">支出</option>
+                        <option value="income">收入</option>
+                    </select>
+                </div>
+
+                <div class="form__field">
+                    <label for="amount">金额（元）</label>
+                    <input id="amount" name="amount" type="number" min="0.01" step="0.01" required>
+                </div>
+
+                <div class="form__field">
+                    <label for="date">日期</label>
+                    <input id="date" name="date" type="date" required>
+                </div>
+
+                <div class="form__field">
+                    <label for="category">类别</label>
+                    <input id="category" name="category" type="text" maxlength="30" required>
+                </div>
+
+                <div class="form__field">
+                    <label for="remark">备注</label>
+                    <input id="remark" name="remark" type="text" maxlength="200">
+                </div>
+
+                <button type="submit" class="button button--primary">保存</button>
+                <p id="form-message" class="form__message" role="status"></p>
+            </form>
+        </section>
+
+        <!-- 历史账单列表：成员 H -->
+        <section id="record-list" class="card">
+            <h2 class="card__title">历史账单</h2>
+            <div class="filters">
+                <input id="filter-start-date" type="date" aria-label="开始日期">
+                <input id="filter-end-date" type="date" aria-label="结束日期">
+                <select id="filter-type" aria-label="类型">
+                    <option value="">全部类型</option>
+                    <option value="income">收入</option>
+                    <option value="expense">支出</option>
+                </select>
+                <input id="filter-category" type="text" placeholder="类别" aria-label="类别">
+                <button id="filter-apply" type="button" class="button">筛选</button>
+            </div>
+
+            <table class="records">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>类型</th>
+                        <th>类别</th>
+                        <th>金额（元）</th>
+                        <th>备注</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="record-list-body">
+                    <!-- 由 records.js 渲染 -->
+                </tbody>
+            </table>
+
+            <button id="load-more" type="button" class="button">查看更多</button>
+            <p id="records-message" class="form__message" role="status"></p>
+        </section>
+
+        <!-- 统计展示：成员 I -->
+        <section id="statistics" class="card">
+            <h2 class="card__title">统计</h2>
+            <div class="filters">
+                <input id="stats-start-date" type="date" aria-label="统计开始日期">
+                <input id="stats-end-date" type="date" aria-label="统计结束日期">
+                <button id="stats-apply" type="button" class="button">统计</button>
+            </div>
+
+            <h3 class="card__subtitle">按类别汇总</h3>
+            <ul id="category-stats" class="category-list">
+                <!-- 由 statistics.js 渲染 -->
+            </ul>
+
+            <!-- 可选：ECharts 图表挂载点 -->
+            <div id="chart" class="chart" hidden></div>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/records.js"></script>
+    <script src="js/statistics.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

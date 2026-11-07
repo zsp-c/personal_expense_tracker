@@ -30,6 +30,30 @@ def _validate_date(value: str, field: str) -> str:
     return value
 
 
+def _validate_filters(
+    start_date: str | None,
+    end_date: str | None,
+    type: str | None,
+    category: str | None,
+) -> None:
+    """校验筛选条件，非法时抛出 ValueError。
+
+    - start_date / end_date：YYYY-MM-DD，且开始日期不能晚于结束日期。
+    - type：income（收入）或 expense（支出）。
+    - category：按类别精确匹配，不能为空字符串。
+    """
+    if start_date:
+        _validate_date(start_date, "start_date")
+    if end_date:
+        _validate_date(end_date, "end_date")
+    if start_date and end_date and start_date > end_date:
+        raise ValueError("start_date 不能晚于 end_date")
+    if type and type not in VALID_TYPES:
+        raise ValueError("type 只能是 income 或 expense")
+    if category is not None and not category.strip():
+        raise ValueError("category 不能为空字符串")
+
+
 def list_records(
     start_date: str | None = None,
     end_date: str | None = None,
@@ -50,16 +74,7 @@ def list_records(
     返回的每条记录包含 id / date / type / amount / category / remark / created_at，
     amount 单位为「分」。
     """
-    if start_date:
-        _validate_date(start_date, "start_date")
-    if end_date:
-        _validate_date(end_date, "end_date")
-    if start_date and end_date and start_date > end_date:
-        raise ValueError("start_date 不能晚于 end_date")
-    if type and type not in VALID_TYPES:
-        raise ValueError("type 只能是 income 或 expense")
-    if category is not None and not category.strip():
-        raise ValueError("category 不能为空字符串")
+    _validate_filters(start_date, end_date, type, category)
 
     if limit is None:
         effective_limit = query_repository.DEFAULT_LIMIT
@@ -73,6 +88,23 @@ def list_records(
         category=category,
         limit=effective_limit,
         offset=offset,
+    )
+
+
+def list_all_records(
+    start_date: str | None = None,
+    end_date: str | None = None,
+    type: str | None = None,
+    category: str | None = None,
+) -> list[dict]:
+    """导出用：按条件返回全部匹配记录（不分页，也不受 MAX_LIMIT 限制）。"""
+    _validate_filters(start_date, end_date, type, category)
+    return query_repository.query_records(
+        start_date=start_date,
+        end_date=end_date,
+        type=type,
+        category=category,
+        limit=None,
     )
 
 

@@ -1,0 +1,2 @@
+# Windows 批处理必须使用 CRLF 换行，否则 cmd 解析会错乱（详见 start.bat）
+*.bat text eol=crlf

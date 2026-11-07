@@ -7,7 +7,7 @@
     <title>个人记账本 - 记录</title>
     <link rel="icon" type="image/png" href="img/校徽.png">
     <link rel="stylesheet" href="css/style.css">
-
+    <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
     <!-- 顶部导航：模块负责人 成员 F -->
@@ -18,11 +18,31 @@
             <h1 class="topbar__title">个人记账本</h1>
         </div>
         <nav class="topbar__nav">
+            <a href="#record-form" class="is-active">记录</a>
             <a href="statistics.html">统计</a>
         </nav>
     </header>
 
     <main class="layout">
+        <!-- 收支概览：成员 I -->
+        <section id="overview" class="card overview">
+            <h2 class="card__title">收支概览</h2>
+            <div class="overview__cards">
+                <article class="stat-card stat-card--income">
+                    <p class="stat-card__label">总收入</p>
+                    <p class="stat-card__value" id="total-income">--</p>
+                </article>
+                <article class="stat-card stat-card--expense">
+                    <p class="stat-card__label">总支出</p>
+                    <p class="stat-card__value" id="total-expense">--</p>
+                </article>
+                <article class="stat-card stat-card--balance">
+                    <p class="stat-card__label">当前结余</p>
+                    <p class="stat-card__value" id="total-balance">--</p>
+                </article>
+            </div>
+        </section>
+
         <!-- 新增记账表单：成员 G -->
         <section id="record-form" class="card">
             <h2 class="card__title">新增记账</h2>
@@ -95,6 +115,7 @@
                 </select>
                 <input id="filter-category" type="text" placeholder="类别" aria-label="类别">
                 <button id="filter-apply" type="button" class="button">筛选</button>
+                <button id="export-excel" type="button" class="button">导出 Excel</button>
             </div>
 
             <table class="records">
@@ -124,6 +145,7 @@
 
     <script src="js/api.js"></script>
     <script src="js/records.js"></script>
+    <script src="js/statistics.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

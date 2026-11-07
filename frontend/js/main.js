@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.StatisticsModule.initStatistics();
     }
 
-    // TODO(成员 F)：首次加载时拉取列表和统计；统一处理模块初始化异常。
+    // 列表首屏由 RecordsModule.initRecordList 内部触发，统计模块自行完成首次加载。
 
     // 导航高亮
     document.querySelectorAll(".topbar__nav a").forEach((link) => {

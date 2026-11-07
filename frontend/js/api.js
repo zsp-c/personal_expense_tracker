@@ -2,34 +2,78 @@
 
 const API_BASE = "http://127.0.0.1:8000";
 
+// 请求超时时间：超过 9 秒按超时提示，避免页面一直停在「加载中…」
+const REQUEST_TIMEOUT = 9000;
+
 /**
  * 发送请求并统一处理错误。
  * 后端错误格式为 {"detail": "..."}。
+ * 超时 / 跨域（file:// 打开）都会转成可读提示，原始错误保留在 error 上便于排查。
  */
 async function request(path, options = {}) {
-    const response = await fetch(`${API_BASE}${path}`, {
-        headers: {
-            "Content-Type": "application/json",
-        },
-        ...options,
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
-    if (!response.ok) {
-        let message = "请求失败";
-        try {
-            const error = await response.json();
-            if (error && error.detail) {
-                message = typeof error.detail === "string"
-                    ? error.detail
-                    : JSON.stringify(error.detail);
+    try {
+        const response = await fetch(`${API_BASE}${path}`, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+            ...options,
+            signal: controller.signal,
+        });
+
+        if (!response.ok) {
+            let message = "请求失败";
+            try {
+                const error = await response.json();
+                if (error && error.detail) {
+                    if (typeof error.detail === "string") {
+                        message = error.detail;
+                    } else if (Array.isArray(error.detail)) {
+                        // FastAPI 校验错误的 detail 是数组，取其中可读的 msg
+                        message = error.detail
+                            .map((item) => (item && item.msg) || JSON.stringify(item))
+                            .join("；");
+                    } else {
+                        message = JSON.stringify(error.detail);
+                    }
+                }
+            } catch (_) {
+                // 响应体不是 JSON 时保留默认提示
             }
-        } catch (_) {
-            // 响应体不是 JSON 时保留默认提示
+            throw new Error(message);
         }
-        throw new Error(message);
-    }
 
-    return response.json();
+        return response.json();
+    } catch (error) {
+        if (error && error.name === "AbortError") {
+            const timeoutError = new Error("请求超时，请检查后端是否响应缓慢");
+            timeoutError.code = "TIMEOUT";
+            timeoutError.cause = error;
+            throw timeoutError;
+        }
+        throw error;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+/**
+ * 把请求异常转成用户能看懂的提示。
+ * - TypeError：网络层失败，最常见是 file:// 打开被跨域拦截，或后端没启动
+ * - TIMEOUT：后端响应过慢
+ * - 其他：沿用后端 detail
+ */
+function describeApiError(error, fallback = "请稍后重试") {
+    if (!error) return fallback;
+    if (error.code === "TIMEOUT" || error.name === "AbortError") {
+        return "请求超时，请检查后端是否响应缓慢";
+    }
+    if (error.name === "TypeError") {
+        return "无法连接后端：如果你是用文件方式打开的页面，请改用 http://localhost:5500/frontend/index.html 访问；并确认后端已在 8000 端口启动";
+    }
+    return error.message || fallback;
 }
 
 function buildQuery(params = {}) {

@@ -3,7 +3,12 @@
 (function () {
     const PAGE_SIZE = 10;
 
+    // 当前已显示的记录条数，作为下一页的起点
     let currentOffset = 0;
+    // 后端是否还有更多数据
+    let hasMore = false;
+    // 防止重复请求（加载中再次点击筛选 / 查看更多）
+    let loading = false;
 
     /** 初始化新增记账表单 —— 成员 G */
     function initRecordForm() {
@@ -86,14 +91,16 @@
                     "success"
                 );
 
-                // 通知列表与统计模块刷新（statistics.js 监听该事件）
+                // 列表回到第一页重新加载，刚保存的记录会出现在最前面
+                currentOffset = 0;
+                loadRecords();
+
+                // 通知概览与统计模块刷新（statistics.js 监听该事件）
                 document.dispatchEvent(new CustomEvent("records:changed"));
                 window.dispatchEvent(new CustomEvent("records:changed"));
             } catch (error) {
-                const message = error && error.name === "TypeError"
-                    ? "无法连接后端服务，请确认后端已启动"
-                    : (error && error.message) || "请稍后重试";
-                setFormMessage(form, `保存失败：${message}`, "error");
+                console.error("[records] 保存失败", error);
+                setFormMessage(form, `保存失败：${describeError(error, "请稍后重试")}`, "error");
             } finally {
                 setSubmitting(submitButton, false);
             }
@@ -198,32 +205,148 @@
         }
     }
 
-    /** 加载账单列表。TODO(成员 H) */
-    async function loadRecords({ append = false } = {}) {
-        // TODO(成员 H)：
-        // 1. 从筛选控件读取条件。
-        // 2. 调用 api.getRecords({..., limit: PAGE_SIZE, offset: currentOffset})。
-        // 3. renderRecords(records, append)。
-        // 4. 记录数量小于 PAGE_SIZE 时隐藏“查看更多”。
-        throw new Error("待实现：成员 H");
+    /** 读取筛选条件，参数名与后端 GET /api/records/ 保持一致 */
+    function readFilters() {
+        const valueOf = (id) => {
+            const node = document.getElementById(id);
+            return node ? node.value.trim() : "";
+        };
+
+        return {
+            start_date: valueOf("filter-start-date"),
+            end_date: valueOf("filter-end-date"),
+            type: valueOf("filter-type"),
+            category: valueOf("filter-category"),
+        };
     }
 
-    /** 渲染账单行。注意：文本统一用 textContent 写入。TODO(成员 H) */
+    /**
+     * 统一错误文案：超时 / 跨域 / 后端 detail 交给 api.js 的 describeApiError 区分，
+     * 这里只做兜底，避免 api.js 未加载时连提示都拿不到。
+     */
+    function describeError(error, fallback) {
+        if (typeof describeApiError === "function") return describeApiError(error, fallback);
+        return (error && error.message) || fallback;
+    }
+
+    /** 列表区提示：统一用 #records-message，不只在控制台报错 */
+    function setRecordsMessage(text, tone) {
+        const node = document.getElementById("records-message");
+        if (!node) return;
+        node.textContent = text;
+        node.classList.remove("form__message--success", "form__message--error");
+        if (tone === "success") node.classList.add("form__message--success");
+        if (tone === "error") node.classList.add("form__message--error");
+    }
+
+    /** 控制“查看更多”按钮显隐 */
+    function toggleLoadMore(show) {
+        const more = document.getElementById("load-more");
+        if (more) more.hidden = !show;
+    }
+
+    /** 空状态 / 失败占位行 */
+    function renderPlaceholder(tbody, text) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 6;
+        cell.textContent = text;
+        row.appendChild(cell);
+        tbody.appendChild(row);
+    }
+
+    /** 追加数据前先移除占位行 */
+    function clearPlaceholder(tbody) {
+        const cell = tbody.querySelector("td[colspan]");
+        if (cell && cell.parentNode) cell.parentNode.remove();
+    }
+
+    /**
+     * 加载账单列表。
+     * 后端 GET /api/records/ 只接受 start_date / end_date / type / category / limit，
+     * 没有暴露 offset（service 与 repository 内部支持，但路由层未透传），
+     * 因此这里先取到 offset + PAGE_SIZE 条，再在本地切片出当前页。
+     */
+    async function loadRecords({ append = false } = {}) {
+        const tbody = document.getElementById("record-list-body");
+        if (!tbody) return;
+        if (loading) return;
+
+        const filters = readFilters();
+
+        // 客户端先拦一次日期区间，避免用一个必然 400 的请求打扰后端
+        if (filters.start_date && filters.end_date && filters.start_date > filters.end_date) {
+            setRecordsMessage("开始日期不能晚于结束日期", "error");
+            hasMore = false;
+            toggleLoadMore(false);
+            return;
+        }
+
+        const offset = append ? currentOffset : 0;
+
+        loading = true;
+        setRecordsMessage(append ? "正在加载更多…" : "正在加载…");
+
+        try {
+            if (typeof api === "undefined" || typeof api.getRecords !== "function") {
+                throw new Error("API 未加载，无法获取记录");
+            }
+
+            const rows = await api.getRecords({ ...filters, limit: offset + PAGE_SIZE });
+            const page = rows.slice(offset, offset + PAGE_SIZE);
+
+            currentOffset = offset + page.length;
+            hasMore = rows.length >= offset + PAGE_SIZE;
+
+            if (page.length === 0 && append) {
+                hasMore = false;
+                toggleLoadMore(false);
+                setRecordsMessage("没有更多记录了", "success");
+                return;
+            }
+
+            renderRecords(page, append);
+
+            if (page.length === 0) {
+                setRecordsMessage("暂无记录", "success");
+            } else if (hasMore) {
+                setRecordsMessage(`已显示 ${currentOffset} 条记录，可继续加载更多`);
+            } else {
+                setRecordsMessage(`已显示全部 ${currentOffset} 条记录`, "success");
+            }
+
+            toggleLoadMore(hasMore);
+        } catch (error) {
+            console.error("[records] 加载列表失败", error);
+            setRecordsMessage(`加载失败：${describeError(error, "请稍后重试")}`, "error");
+
+            if (!append) {
+                // 首次/重新筛选失败时清掉旧数据，避免展示过期结果
+                tbody.textContent = "";
+                renderPlaceholder(tbody, "加载失败，请稍后重试");
+                currentOffset = 0;
+            }
+
+            hasMore = false;
+            toggleLoadMore(false);
+        } finally {
+            loading = false;
+        }
+    }
+
+    /** 渲染账单行。注意：文本统一用 textContent 写入 */
     function renderRecords(records, append = false) {
         const tbody = document.getElementById("record-list-body");
         if (!tbody) return;
 
         if (!append) {
             tbody.textContent = "";
+        } else {
+            clearPlaceholder(tbody);
         }
 
-        if (records.length === 0 && !append) {
-            const row = document.createElement("tr");
-            const cell = document.createElement("td");
-            cell.colSpan = 6;
-            cell.textContent = "暂无记录";
-            row.appendChild(cell);
-            tbody.appendChild(row);
+        if (records.length === 0) {
+            if (!append) renderPlaceholder(tbody, "暂无记录");
             return;
         }
 
@@ -232,23 +355,95 @@
         });
     }
 
-    /** 创建单行 DOM。TODO(成员 H) */
+    /** 创建单行 DOM：日期、类型、类别、金额、备注、删除按钮 */
     function createRecordRow(record) {
-        // TODO(成员 H)：生成 <tr>，包含日期、类型、类别、金额、备注、删除按钮。
-        // 删除按钮调用 handleDelete(record.id)。
-        throw new Error("待实现：成员 H");
+        const row = document.createElement("tr");
+        if (record.id !== undefined && record.id !== null) {
+            row.dataset.id = String(record.id);
+        }
+
+        const isIncome = record.type === "income";
+
+        const dateCell = document.createElement("td");
+        dateCell.textContent = record.date || "";
+        row.appendChild(dateCell);
+
+        // 类型用色块标签，与 style.css 里的 tag 体系一致
+        const typeCell = document.createElement("td");
+        const tag = document.createElement("span");
+        tag.className = isIncome ? "tag tag--income" : "tag tag--expense";
+        tag.textContent = isIncome ? "收入" : "支出";
+        typeCell.appendChild(tag);
+        row.appendChild(typeCell);
+
+        const categoryCell = document.createElement("td");
+        categoryCell.textContent = record.category || "未分类";
+        row.appendChild(categoryCell);
+
+        // 金额由「分」转「元」展示：收入绿色带 +，支出红色带 -
+        const amountCell = document.createElement("td");
+        amountCell.className = "is-num";
+        const amountText = document.createElement("span");
+        amountText.className = isIncome ? "amount--income" : "amount--expense";
+        amountText.textContent = (isIncome ? "+" : "-") + fenToYuan(record.amount);
+        amountCell.appendChild(amountText);
+        row.appendChild(amountCell);
+
+        const remarkCell = document.createElement("td");
+        remarkCell.textContent = record.remark || "—";
+        row.appendChild(remarkCell);
+
+        const actionCell = document.createElement("td");
+        actionCell.className = "is-action";
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "button button--danger";
+        deleteButton.textContent = "删除";
+        deleteButton.addEventListener("click", () => handleDelete(record.id, deleteButton));
+        actionCell.appendChild(deleteButton);
+        row.appendChild(actionCell);
+
+        return row;
     }
 
-    /** 删除记录，需二次确认。TODO(成员 H) */
-    async function handleDelete(id) {
-        // TODO(成员 H)：
-        // 1. confirm("确定删除这条记录吗？")。
-        // 2. api.deleteRecord(id)。
-        // 3. 刷新列表和统计。
-        throw new Error("待实现：成员 H");
+    /** 删除记录：先确认，再调 deleteRecord，成功后刷新列表与概览统计 */
+    async function handleDelete(id, button) {
+        if (id === undefined || id === null) return;
+        if (!window.confirm("确定删除这条记录吗？删除后不可恢复。")) return;
+
+        const originalText = button ? button.textContent : "";
+        if (button) {
+            button.disabled = true;
+            button.textContent = "删除中…";
+        }
+        setRecordsMessage("正在删除…");
+
+        try {
+            if (typeof api === "undefined" || typeof api.deleteRecord !== "function") {
+                throw new Error("API 未加载，无法删除");
+            }
+            await api.deleteRecord(id);
+        } catch (error) {
+            console.error("[records] 删除失败", error);
+            setRecordsMessage(`删除失败：${describeError(error, "请稍后重试")}`, "error");
+            if (button) {
+                button.disabled = false;
+                button.textContent = originalText || "删除";
+            }
+            return;
+        }
+
+        // 从第一页重新加载，被删的行随之消失，分页状态也保持一致
+        currentOffset = 0;
+        await loadRecords();
+        setRecordsMessage("已删除该记录", "success");
+
+        // 通知概览与统计模块刷新（statistics.js 监听该事件）
+        document.dispatchEvent(new CustomEvent("records:changed"));
+        window.dispatchEvent(new CustomEvent("records:changed"));
     }
 
-    /** 初始化筛选按钮和“查看更多”。TODO(成员 H) */
+    /** 初始化筛选按钮、“查看更多”，并拉取第一页 */
     function initRecordList() {
         const apply = document.getElementById("filter-apply");
         const more = document.getElementById("load-more");
@@ -261,10 +456,30 @@
         }
 
         if (more) {
+            more.hidden = true;
             more.addEventListener("click", () => {
                 loadRecords({ append: true });
             });
         }
+
+        // 在筛选输入框里按回车等价于点「筛选」
+        ["filter-start-date", "filter-end-date", "filter-category"].forEach((id) => {
+            const input = document.getElementById(id);
+            if (!input) return;
+            input.addEventListener("keydown", (event) => {
+                if (event.key !== "Enter") return;
+                event.preventDefault();
+                if (apply) {
+                    apply.click();
+                } else {
+                    currentOffset = 0;
+                    loadRecords();
+                }
+            });
+        });
+
+        // 首屏自动加载第一页
+        return loadRecords();
     }
 
     /** 表单顶部/底部反馈：使用现有的 #form-message，不新造提示组件 */

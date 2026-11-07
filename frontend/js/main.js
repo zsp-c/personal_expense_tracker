@@ -24,6 +24,7 @@
         banner.textContent = messages.join("；");
     }
 
+    // 导航高亮：统一在这里绑定一次，统计模块由下面的 initStatistics 初始化
     function initNavigation() {
         document.querySelectorAll(".topbar__nav a").forEach((link) => {
             link.addEventListener("click", () => {

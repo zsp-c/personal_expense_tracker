@@ -515,6 +515,20 @@
     .button--primary:active {
         transform: translateY(0);
     }
+
+    /* 列表行内的删除按钮 */
+    .button--danger {
+        color: var(--color-expense);
+        background: #fff6f6;
+        border-color: #f0c9cc;
+    }
+
+    .button--danger:hover {
+        color: #ffffff;
+        background: var(--color-expense);
+        border-color: var(--color-expense);
+        box-shadow: 0 6px 16px rgba(190, 58, 74, 0.26);
+    }
     
     /* ---------- 筛选栏 ---------- */
     
@@ -571,6 +585,21 @@
         padding: 30px 10px;
         color: var(--color-muted);
         text-align: center;
+    }
+
+    /* 列表区提示：#records-message 默认中性色，成功/失败沿用状态色 */
+    #records-message {
+        margin: 12px 0 0;
+        color: var(--color-muted);
+        font-size: 13px;
+    }
+
+    #records-message.form__message--success {
+        color: var(--color-income);
+    }
+
+    #records-message.form__message--error {
+        color: var(--color-expense);
     }
     
     .records .amount--income {

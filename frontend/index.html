@@ -5,15 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>个人记账本</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/shell.css">
 </head>
 <body>
     <!-- 顶部导航：模块负责人 成员 F -->
     <header class="topbar">
-        <h1 class="topbar__title">个人记账本</h1>
+        <div class="shell-brand">
+            <img class="shell-brand__logo" src="../img/校徽.png" alt="福州大学校徽">
+            <img class="shell-brand__logo" src="../img/院徽.png" alt="福州大学计算机与大数据学院院徽">
+            <h1 class="topbar__title">个人记账本</h1>
+        </div>
         <nav class="topbar__nav">
-            <a href="#overview" class="is-active">首页</a>
-            <a href="#record-form">记账</a>
-            <a href="#record-list">账单</a>
+            <a href="#record-form" class="is-active">记录</a>
+            <a href="#record-list">查看</a>
             <a href="#statistics">统计</a>
         </nav>
     </header>
@@ -128,6 +132,10 @@
             <div id="chart" class="chart" hidden></div>
         </section>
     </main>
+
+    <footer class="shell-footer">
+        <p class="shell-footer__text">© 2026 蛋仔派队</p>
+    </footer>
 
     <script src="js/api.js"></script>
     <script src="js/records.js"></script>

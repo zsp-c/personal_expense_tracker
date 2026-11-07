@@ -1,25 +1,65 @@
 /* 页面初始化与模块协调 —— 模块负责人：成员 F */
 
-document.addEventListener("DOMContentLoaded", () => {
-    // 各模块在自身文件中挂载到 window.XXXModule，按加载顺序初始化。
-    if (window.RecordsModule) {
-        window.RecordsModule.initRecordForm();
-        window.RecordsModule.initRecordList();
+(function () {
+    "use strict";
+
+    const messages = [];
+    let banner = null;
+
+    /** 页面级错误提示：任何初始化异常都显示在页面顶部，不只丢进控制台。 */
+    function showGlobalError(text) {
+        if (!text || messages.indexOf(text) !== -1) return;
+        messages.push(text);
+
+        const layout = document.querySelector("main.layout");
+        if (!layout) return;
+
+        if (!banner) {
+            banner = document.createElement("div");
+            banner.id = "global-error";
+            banner.className = "global-error";
+            banner.setAttribute("role", "alert");
+            layout.insertBefore(banner, layout.firstChild);
+        }
+        banner.textContent = messages.join("；");
     }
 
-    if (window.StatisticsModule) {
-        window.StatisticsModule.initStatistics();
-    }
-
-    // TODO(成员 F)：首次加载时拉取列表和统计；统一处理模块初始化异常。
-
-    // 导航高亮
-    document.querySelectorAll(".topbar__nav a").forEach((link) => {
-        link.addEventListener("click", () => {
-            document.querySelectorAll(".topbar__nav a").forEach((item) => {
-                item.classList.remove("is-active");
+    function initNavigation() {
+        document.querySelectorAll(".topbar__nav a").forEach((link) => {
+            link.addEventListener("click", () => {
+                document.querySelectorAll(".topbar__nav a").forEach((item) => {
+                    item.classList.remove("is-active");
+                });
+                link.classList.add("is-active");
             });
-            link.classList.add("is-active");
         });
+    }
+
+    /** 记录模块：只在首页存在，未加载该脚本（如统计页）时跳过。 */
+    async function initRecords() {
+        if (!window.RecordsModule) return;
+        try {
+            window.RecordsModule.initRecordForm();
+            window.RecordsModule.initRecordList();
+            await window.RecordsModule.loadRecords();
+        } catch (error) {
+            showGlobalError("记录模块初始化失败：" + (error && error.message ? error.message : error));
+        }
+    }
+
+    /** 统计模块：只在统计页存在，由本函数作为唯一初始化入口。 */
+    async function initStatistics() {
+        if (!window.StatisticsModule) return;
+        try {
+            await window.StatisticsModule.initStatistics();
+        } catch (error) {
+            showGlobalError("统计模块初始化失败：" + (error && error.message ? error.message : error));
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        initNavigation();
+        initRecords();
+        initStatistics();
     });
-});
+})();

@@ -29,6 +29,7 @@ def list_records(
     type: str | None = Query(default=None, pattern="^(income|expense)$"),
     category: str | None = Query(default=None),
     limit: int | None = Query(default=None, ge=1),
+    offset: int = Query(default=0, ge=0),
 ):
     """按条件查询记录列表。"""
     return query_service.list_records(
@@ -37,13 +38,17 @@ def list_records(
         type=type,
         category=category,
         limit=limit,
+        offset=offset,
     )
 
 
 @router.get("/{record_id}")
 def get_record(record_id: int):
     """查询单条记录。"""
-    return query_service.get_record(record_id)
+    try:
+        return query_service.get_record(record_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.put("/{record_id}")
